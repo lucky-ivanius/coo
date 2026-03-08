@@ -1,0 +1,5 @@
+{
+	"enabledPlugins": {
+		"stacks@stacks-claude-plugin": true
+	}
+}
