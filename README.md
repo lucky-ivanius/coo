@@ -61,3 +61,9 @@ Any contract can read a verified result:
 ## Status
 
 Under active development. Contracts are not audited. Do not use on mainnet.
+
+---
+
+## License
+
+[MIT](./LICENSE)
