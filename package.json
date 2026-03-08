@@ -1,0 +1,32 @@
+{
+	"$schema": "https://json.schemastore.org/package.json",
+	"name": "coo",
+	"description": "Trustless Assertion Layer for the Stacks Ecosystem",
+	"type": "module",
+	"private": true,
+	"packageManager": "bun@1.3.10",
+	"workspaces": {
+		"packages": [
+			"contracts/*",
+			"packages/*"
+		],
+		"catalog": {
+			"@tsconfig/bun": "1.0.10",
+			"@types/bun": "1.3.10",
+			"@types/node": "25.3.5",
+			"typescript": "5.9.3"
+		}
+	},
+	"devDependencies": {
+		"@tsconfig/bun": "catalog:",
+		"husky": "9.1.7",
+		"turbo": "2.8.14"
+	},
+	"dependencies": {
+		"typescript": "catalog:"
+	},
+	"overrides": {
+		"@types/bun": "catalog:",
+		"@types/node": "catalog:"
+	}
+}
