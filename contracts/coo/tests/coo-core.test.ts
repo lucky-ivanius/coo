@@ -1,20 +1,33 @@
 import { describe, expect, it } from "vitest";
+import { Cl } from "@stacks/transactions";
 
 const accounts = simnet.getAccounts();
-const address1 = accounts.get("wallet_1")!;
+const deployer = accounts.get("deployer")!;
+const wallet1 = accounts.get("wallet_1")!;
 
-/*
-The test below is an example. To learn more, read the testing documentation here:
-https://docs.stacks.co/clarinet/testing-with-clarinet-sdk
-*/
-
-describe("example tests", () => {
-	it("ensures simnet is well initialised", () => {
-		expect(simnet.blockHeight).toBeDefined();
+describe("COO Core Contract", () => {
+	it("get-protocol-params returns correct values", () => {
+		const { result } = simnet.callReadOnlyFn(
+			"coo-core",
+			"get-protocol-params",
+			[],
+			deployer,
+		);
+		expect(result).toBeTuple({
+			"default-liveness": Cl.uint(144),
+			"min-bond-multiplier": Cl.uint(2),
+			"protocol-fee-bps": Cl.uint(0),
+			"contract-owner": Cl.standardPrincipal(deployer),
+		});
 	});
 
-	// it("shows an example", () => {
-	//   const { result } = simnet.callReadOnlyFn("counter", "get-counter", [], address1);
-	//   expect(result).toBeUint(0);
-	// });
+	it("get-sbtc-balance reads devnet wallet balance", () => {
+		const { result } = simnet.callReadOnlyFn(
+			"coo-core",
+			"get-sbtc-balance",
+			[Cl.standardPrincipal(wallet1)],
+			wallet1,
+		);
+		expect(result).toBeOk(Cl.uint(1_000_000_000));
+	});
 });
