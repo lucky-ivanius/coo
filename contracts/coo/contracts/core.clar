@@ -1,4 +1,4 @@
-;; title: coo-core
+;; title: core
 ;; version: 0.1.0
 ;; summary: Clarity Optimistic Oracle - Core Contract
 ;; description: Trustless Assertion Layer for the Stacks Ecosystem.

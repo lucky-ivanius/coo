@@ -8,7 +8,7 @@ const wallet1 = accounts.get("wallet_1")!;
 describe("COO Core Contract", () => {
 	it("get-protocol-params returns correct values", () => {
 		const { result } = simnet.callReadOnlyFn(
-			"coo-core",
+			"core",
 			"get-protocol-params",
 			[],
 			deployer,
@@ -23,7 +23,7 @@ describe("COO Core Contract", () => {
 
 	it("get-sbtc-balance reads devnet wallet balance", () => {
 		const { result } = simnet.callReadOnlyFn(
-			"coo-core",
+			"core",
 			"get-sbtc-balance",
 			[Cl.standardPrincipal(wallet1)],
 			wallet1,

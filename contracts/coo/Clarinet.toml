@@ -26,7 +26,7 @@ check_checker = { trusted_sender = false, trusted_caller = false, callee_filter 
 
 [contracts]
 
-[contracts.coo-core]
-path = "contracts/coo-core.clar"
+[contracts.core]
+path = "contracts/core.clar"
 clarity_version = 4
 epoch = "latest"
