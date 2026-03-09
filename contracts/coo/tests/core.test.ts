@@ -10,11 +10,13 @@ const sbtcToken = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token";
 const statementId = Cl.bufferFromHex("aa".repeat(32));
 const claimHash = Cl.bufferFromHex("bb".repeat(32));
 
-describe("COO Core Contract", () => {
+describe("Core", () => {
+	const contractName = "coo-core";
+
 	describe("protocol params", () => {
 		it("get-default-liveness returns correct value", () => {
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-default-liveness",
 				[],
 				deployer,
@@ -24,7 +26,7 @@ describe("COO Core Contract", () => {
 
 		it("get-min-bond-multiplier returns correct value", () => {
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-min-bond-multiplier",
 				[],
 				deployer,
@@ -34,7 +36,7 @@ describe("COO Core Contract", () => {
 
 		it("get-protocol-fee-bps returns correct value", () => {
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-protocol-fee-bps",
 				[],
 				deployer,
@@ -44,7 +46,7 @@ describe("COO Core Contract", () => {
 
 		it("get-contract-owner returns correct value", () => {
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-contract-owner",
 				[],
 				deployer,
@@ -56,7 +58,7 @@ describe("COO Core Contract", () => {
 	describe("request", () => {
 		it("creates a request and stores it in request-map", () => {
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
@@ -65,7 +67,7 @@ describe("COO Core Contract", () => {
 			const requestBlock = simnet.blockHeight;
 
 			const entry = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-request",
 				[statementId],
 				deployer,
@@ -90,7 +92,7 @@ describe("COO Core Contract", () => {
 			);
 
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
@@ -109,7 +111,7 @@ describe("COO Core Contract", () => {
 
 		it("rejects request with reward = 0", () => {
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(0), Cl.uint(144)],
 				wallet1,
@@ -119,7 +121,7 @@ describe("COO Core Contract", () => {
 
 		it("rejects request with liveness = 0", () => {
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(0)],
 				wallet1,
@@ -129,14 +131,14 @@ describe("COO Core Contract", () => {
 
 		it("rejects duplicate statementId", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
 			);
 
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet2,
@@ -148,14 +150,14 @@ describe("COO Core Contract", () => {
 	describe("assert", () => {
 		it("creates an assertion for an existing request", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
 			);
 
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
@@ -164,7 +166,7 @@ describe("COO Core Contract", () => {
 			const assertBlock = simnet.blockHeight;
 
 			const assertion = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-assertion",
 				[statementId],
 				deployer,
@@ -181,7 +183,7 @@ describe("COO Core Contract", () => {
 
 		it("updates request status to ASSERTED", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
@@ -189,14 +191,14 @@ describe("COO Core Contract", () => {
 			const requestBlock = simnet.blockHeight;
 
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
 			);
 
 			const entry = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"get-request",
 				[statementId],
 				deployer,
@@ -214,7 +216,7 @@ describe("COO Core Contract", () => {
 
 		it("transfers sBTC bond from asserter to contract", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
@@ -228,7 +230,7 @@ describe("COO Core Contract", () => {
 			);
 
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
@@ -247,7 +249,7 @@ describe("COO Core Contract", () => {
 
 		it("rejects assertion on non-existent request", () => {
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
@@ -257,14 +259,14 @@ describe("COO Core Contract", () => {
 
 		it("rejects bond below minimum (2x reward)", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
 			);
 
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(19_999)],
 				wallet2,
@@ -274,21 +276,21 @@ describe("COO Core Contract", () => {
 
 		it("rejects double assertion on same request", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
 			);
 
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
 			);
 
 			const { result } = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
@@ -300,20 +302,20 @@ describe("COO Core Contract", () => {
 	describe("is-liveness-expired", () => {
 		it("returns false when liveness window is still open", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(144)],
 				wallet1,
 			);
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
 			);
 
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"is-liveness-expired",
 				[statementId],
 				deployer,
@@ -323,13 +325,13 @@ describe("COO Core Contract", () => {
 
 		it("returns true after liveness window expires", () => {
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(10_000), Cl.uint(10)],
 				wallet1,
 			);
 			simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(20_000)],
 				wallet2,
@@ -338,7 +340,7 @@ describe("COO Core Contract", () => {
 			simnet.mineEmptyBlocks(11);
 
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"is-liveness-expired",
 				[statementId],
 				deployer,
@@ -348,7 +350,7 @@ describe("COO Core Contract", () => {
 
 		it("returns error for non-existent statement", () => {
 			const { result } = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"is-liveness-expired",
 				[statementId],
 				deployer,
@@ -361,7 +363,7 @@ describe("COO Core Contract", () => {
 		it("full flow works end-to-end", () => {
 			// Step 1: Request
 			const requestResult = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"request",
 				[statementId, Cl.uint(50_000), Cl.uint(144)],
 				wallet1,
@@ -370,7 +372,7 @@ describe("COO Core Contract", () => {
 
 			// Step 2: Assert
 			const assertResult = simnet.callPublicFn(
-				"coo-core",
+				contractName,
 				"assert",
 				[statementId, claimHash, Cl.uint(100_000)],
 				wallet2,
@@ -381,14 +383,14 @@ describe("COO Core Contract", () => {
 			const contractBalance = simnet.callReadOnlyFn(
 				sbtcToken,
 				"get-balance",
-				[Cl.contractPrincipal(deployer, "coo-core")],
+				[Cl.contractPrincipal(deployer, contractName)],
 				deployer,
 			);
 			expect(contractBalance.result).toBeOk(Cl.uint(150_000));
 
 			// Verify liveness not yet expired
 			const liveness = simnet.callReadOnlyFn(
-				"coo-core",
+				contractName,
 				"is-liveness-expired",
 				[statementId],
 				deployer,
