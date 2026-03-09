@@ -1,0 +1,19 @@
+{
+	"name": "@coo/coo-contracts",
+	"version": "0.0.1",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"test": "vitest run",
+		"test:report": "vitest run -- --coverage --costs",
+		"test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\""
+	},
+	"dependencies": {
+		"@stacks/clarinet-sdk": "^3.9.0",
+		"@stacks/transactions": "^7.2.0",
+		"@types/node": "catalog:",
+		"chokidar-cli": "^3.0.0",
+		"vitest": "^4.0.7",
+		"vitest-environment-clarinet": "^3.0.0"
+	}
+}
