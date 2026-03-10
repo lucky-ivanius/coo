@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { Cl } from "@stacks/transactions";
+import { describe, expect, it } from "vitest";
+import { computeAssertionId } from "./fixtures/assertion";
 
 const accounts = simnet.getAccounts();
 const deployer = accounts.get("deployer")!;
@@ -7,14 +8,14 @@ const wallet1 = accounts.get("wallet_1")!;
 const wallet2 = accounts.get("wallet_2")!;
 
 const sbtcToken = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token";
-const statementId = Cl.bufferFromHex("aa".repeat(32));
-const claimHash = Cl.bufferFromHex("bb".repeat(32));
+const identifier = Cl.bufferFromHex("aa".repeat(32));
+const claim = Cl.bufferFromHex("cc".repeat(64));
 
 describe("Core", () => {
 	const contractName = "coo-core";
 
 	describe("protocol params", () => {
-		it("get-default-liveness returns correct value", () => {
+		it("get-default-liveness returns 144", () => {
 			const { result } = simnet.callReadOnlyFn(
 				contractName,
 				"get-default-liveness",
@@ -24,56 +25,57 @@ describe("Core", () => {
 			expect(result).toBeUint(144);
 		});
 
-		it("get-min-bond-multiplier returns correct value", () => {
+		it("get-min-bond-sats returns 10000", () => {
 			const { result } = simnet.callReadOnlyFn(
 				contractName,
-				"get-min-bond-multiplier",
+				"get-min-bond-sats",
 				[],
 				deployer,
 			);
-			expect(result).toBeUint(2);
-		});
-
-		it("get-protocol-fee-bps returns correct value", () => {
-			const { result } = simnet.callReadOnlyFn(
-				contractName,
-				"get-protocol-fee-bps",
-				[],
-				deployer,
-			);
-			expect(result).toBeUint(0);
+			expect(result).toBeUint(10_000);
 		});
 	});
 
-	describe("request", () => {
-		it("creates a request and stores it in request-map", () => {
+	describe("assert", () => {
+		it("returns expected assertionId when liveness is omitted (defaults to DEFAULT_LIVENESS)", () => {
+			const liveness = Cl.none();
+			const expectedId = computeAssertionId(
+				identifier,
+				claim,
+				Cl.uint(10_000),
+				liveness,
+			);
+
 			const { result } = simnet.callPublicFn(
 				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
+				"assert",
+				[identifier, claim, Cl.uint(10_000), liveness],
 				wallet1,
 			);
-			expect(result).toBeOk(Cl.bool(true));
-			const requestBlock = simnet.blockHeight;
 
-			const entry = simnet.callReadOnlyFn(
-				contractName,
-				"get-request",
-				[statementId],
-				deployer,
-			);
-			expect(entry.result).toBeSome(
-				Cl.tuple({
-					requester: Cl.standardPrincipal(wallet1),
-					"reward-sats": Cl.uint(10_000),
-					liveness: Cl.uint(144),
-					status: Cl.uint(1),
-					"created-at-block": Cl.uint(requestBlock),
-				}),
-			);
+			expect(result).toBeOk(expectedId);
 		});
 
-		it("transfers sBTC reward from requester to contract", () => {
+		it("returns expected assertionId when explicit liveness is provided", () => {
+			const liveness = Cl.some(Cl.uint(200));
+			const expectedId = computeAssertionId(
+				identifier,
+				claim,
+				Cl.uint(10_000),
+				liveness,
+			);
+
+			const { result } = simnet.callPublicFn(
+				contractName,
+				"assert",
+				[identifier, claim, Cl.uint(10_000), liveness],
+				wallet1,
+			);
+
+			expect(result).toBeOk(expectedId);
+		});
+
+		it("transfers sBTC bond from caller to contract", () => {
 			const balanceBefore = simnet.callReadOnlyFn(
 				sbtcToken,
 				"get-balance",
@@ -83,8 +85,8 @@ describe("Core", () => {
 
 			simnet.callPublicFn(
 				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
+				"assert",
+				[identifier, claim, Cl.uint(10_000), Cl.none()],
 				wallet1,
 			);
 
@@ -99,293 +101,71 @@ describe("Core", () => {
 			expect(balanceAfter.result).toBeOk(Cl.uint(1_000_000_000 - 10_000));
 		});
 
-		it("rejects request with reward = 0", () => {
-			const { result } = simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(0), Cl.uint(144)],
-				wallet1,
-			);
-			expect(result).toBeErr(Cl.uint(109));
-		});
-
-		it("rejects request with liveness = 0", () => {
-			const { result } = simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(0)],
-				wallet1,
-			);
-			expect(result).toBeErr(Cl.uint(111));
-		});
-
-		it("rejects duplicate statementId", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
-				wallet1,
-			);
-
-			const { result } = simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
-				wallet2,
-			);
-			expect(result).toBeErr(Cl.uint(110));
-		});
-	});
-
-	describe("assert", () => {
-		it("creates an assertion for an existing request", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
-				wallet1,
-			);
-
+		it("rejects bond below MIN_BOND_SATS", () => {
 			const { result } = simnet.callPublicFn(
 				contractName,
 				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-			expect(result).toBeOk(Cl.bool(true));
-			const assertBlock = simnet.blockHeight;
-
-			const assertion = simnet.callReadOnlyFn(
-				contractName,
-				"get-assertion",
-				[statementId],
-				deployer,
-			);
-			expect(assertion.result).toBeSome(
-				Cl.tuple({
-					asserter: Cl.standardPrincipal(wallet2),
-					"claim-hash": claimHash,
-					"bond-sats": Cl.uint(20_000),
-					"asserted-at-block": Cl.uint(assertBlock),
-				}),
-			);
-		});
-
-		it("updates request status to ASSERTED", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
+				[identifier, claim, Cl.uint(9_999), Cl.none()],
 				wallet1,
 			);
-			const requestBlock = simnet.blockHeight;
-
-			simnet.callPublicFn(
-				contractName,
-				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-
-			const entry = simnet.callReadOnlyFn(
-				contractName,
-				"get-request",
-				[statementId],
-				deployer,
-			);
-			expect(entry.result).toBeSome(
-				Cl.tuple({
-					requester: Cl.standardPrincipal(wallet1),
-					"reward-sats": Cl.uint(10_000),
-					liveness: Cl.uint(144),
-					status: Cl.uint(2),
-					"created-at-block": Cl.uint(requestBlock),
-				}),
-			);
+			expect(result).toBeErr(Cl.uint(103)); // ERR_BOND_TOO_LOW
 		});
 
-		it("transfers sBTC bond from asserter to contract", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
-				wallet1,
-			);
-
-			const balanceBefore = simnet.callReadOnlyFn(
-				sbtcToken,
-				"get-balance",
-				[Cl.standardPrincipal(wallet2)],
-				wallet2,
-			);
-
-			simnet.callPublicFn(
-				contractName,
-				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-
-			const balanceAfter = simnet.callReadOnlyFn(
-				sbtcToken,
-				"get-balance",
-				[Cl.standardPrincipal(wallet2)],
-				wallet2,
-			);
-
-			expect(balanceBefore.result).toBeOk(Cl.uint(1_000_000_000));
-			expect(balanceAfter.result).toBeOk(Cl.uint(1_000_000_000 - 20_000));
-		});
-
-		it("rejects assertion on non-existent request", () => {
+		it("rejects duplicate submission — same inputs produce same assertionId", () => {
+			const args = [identifier, claim, Cl.uint(10_000), Cl.none()];
+			simnet.callPublicFn(contractName, "assert", args, wallet1);
 			const { result } = simnet.callPublicFn(
 				contractName,
 				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-			expect(result).toBeErr(Cl.uint(100));
-		});
-
-		it("rejects bond below minimum (2x reward)", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
+				args,
 				wallet1,
 			);
+			expect(result).toBeErr(Cl.uint(101)); // ERR_ALREADY_SUBMITTED
+		});
 
+		it("rejects (some u0) liveness with ERR_INVALID_LIVENESS", () => {
 			const { result } = simnet.callPublicFn(
 				contractName,
 				"assert",
-				[statementId, claimHash, Cl.uint(19_999)],
-				wallet2,
-			);
-			expect(result).toBeErr(Cl.uint(103));
-		});
-
-		it("rejects double assertion on same request", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
+				[identifier, claim, Cl.uint(10_000), Cl.some(Cl.uint(0))],
 				wallet1,
 			);
-
-			simnet.callPublicFn(
-				contractName,
-				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-
-			const { result } = simnet.callPublicFn(
-				contractName,
-				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-			expect(result).toBeErr(Cl.uint(101));
+			expect(result).toBeErr(Cl.uint(109)); // ERR_INVALID_LIVENESS
 		});
-	});
 
-	describe("is-liveness-expired", () => {
-		it("returns false when liveness window is still open", () => {
-			simnet.callPublicFn(
+		it("different identifier with same claim produces different assertionIds — both succeed", () => {
+			const id2 = Cl.bufferFromHex("bb".repeat(32));
+			const liveness = Cl.none();
+
+			const expectedId1 = computeAssertionId(
+				identifier,
+				claim,
+				Cl.uint(10_000),
+				liveness,
+			);
+			const expectedId2 = computeAssertionId(
+				id2,
+				claim,
+				Cl.uint(10_000),
+				liveness,
+			);
+			expect(expectedId1).not.toBe(expectedId2);
+
+			const { result: result1 } = simnet.callPublicFn(
 				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(144)],
+				"assert",
+				[identifier, claim, Cl.uint(10_000), liveness],
 				wallet1,
 			);
-			simnet.callPublicFn(
+			const { result: result2 } = simnet.callPublicFn(
 				contractName,
 				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
+				[id2, claim, Cl.uint(10_000), liveness],
 				wallet2,
 			);
 
-			const { result } = simnet.callReadOnlyFn(
-				contractName,
-				"is-liveness-expired",
-				[statementId],
-				deployer,
-			);
-			expect(result).toBeOk(Cl.bool(false));
-		});
-
-		it("returns true after liveness window expires", () => {
-			simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(10_000), Cl.uint(10)],
-				wallet1,
-			);
-			simnet.callPublicFn(
-				contractName,
-				"assert",
-				[statementId, claimHash, Cl.uint(20_000)],
-				wallet2,
-			);
-
-			simnet.mineEmptyBlocks(11);
-
-			const { result } = simnet.callReadOnlyFn(
-				contractName,
-				"is-liveness-expired",
-				[statementId],
-				deployer,
-			);
-			expect(result).toBeOk(Cl.bool(true));
-		});
-
-		it("returns error for non-existent statement", () => {
-			const { result } = simnet.callReadOnlyFn(
-				contractName,
-				"is-liveness-expired",
-				[statementId],
-				deployer,
-			);
-			expect(result).toBeErr(Cl.uint(100));
-		});
-	});
-
-	describe("happy path: request → assert", () => {
-		it("full flow works end-to-end", () => {
-			// Step 1: Request
-			const requestResult = simnet.callPublicFn(
-				contractName,
-				"request",
-				[statementId, Cl.uint(50_000), Cl.uint(144)],
-				wallet1,
-			);
-			expect(requestResult.result).toBeOk(Cl.bool(true));
-
-			// Step 2: Assert
-			const assertResult = simnet.callPublicFn(
-				contractName,
-				"assert",
-				[statementId, claimHash, Cl.uint(100_000)],
-				wallet2,
-			);
-			expect(assertResult.result).toBeOk(Cl.bool(true));
-
-			// Verify contract holds both reward + bond
-			const contractBalance = simnet.callReadOnlyFn(
-				sbtcToken,
-				"get-balance",
-				[Cl.contractPrincipal(deployer, contractName)],
-				deployer,
-			);
-			expect(contractBalance.result).toBeOk(Cl.uint(150_000));
-
-			// Verify liveness not yet expired
-			const liveness = simnet.callReadOnlyFn(
-				contractName,
-				"is-liveness-expired",
-				[statementId],
-				deployer,
-			);
-			expect(liveness.result).toBeOk(Cl.bool(false));
+			expect(result1).toBeOk(expectedId1);
+			expect(result2).toBeOk(expectedId2);
 		});
 	});
 });
