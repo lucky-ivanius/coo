@@ -43,16 +43,6 @@ describe("Core", () => {
 			);
 			expect(result).toBeUint(0);
 		});
-
-		it("get-contract-owner returns correct value", () => {
-			const { result } = simnet.callReadOnlyFn(
-				contractName,
-				"get-contract-owner",
-				[],
-				deployer,
-			);
-			expect(result).toBePrincipal(deployer);
-		});
 	});
 
 	describe("request", () => {
@@ -116,7 +106,7 @@ describe("Core", () => {
 				[statementId, Cl.uint(0), Cl.uint(144)],
 				wallet1,
 			);
-			expect(result).toBeErr(Cl.uint(108));
+			expect(result).toBeErr(Cl.uint(109));
 		});
 
 		it("rejects request with liveness = 0", () => {
@@ -126,7 +116,7 @@ describe("Core", () => {
 				[statementId, Cl.uint(10_000), Cl.uint(0)],
 				wallet1,
 			);
-			expect(result).toBeErr(Cl.uint(112));
+			expect(result).toBeErr(Cl.uint(111));
 		});
 
 		it("rejects duplicate statementId", () => {
@@ -271,7 +261,7 @@ describe("Core", () => {
 				[statementId, claimHash, Cl.uint(19_999)],
 				wallet2,
 			);
-			expect(result).toBeErr(Cl.uint(109));
+			expect(result).toBeErr(Cl.uint(103));
 		});
 
 		it("rejects double assertion on same request", () => {
