@@ -1,12 +1,12 @@
 # Economics
 
-The bond system is what makes honesty the rational choice. All bonds and rewards are denominated in **sBTC (satoshis)** — Bitcoin-native collateral that gives every claim real economic weight.
+The bond system is what makes honesty the rational choice. All bonds are denominated in **sBTC (satoshis)** — Bitcoin-native collateral that gives every claim real economic weight.
 
 ---
 
 ## Bond Rule
 
-The protocol requires `bond ≥ 2× reward` (in sats) as a minimum. This makes lying always a net loss when there is at least one honest watcher.
+The protocol enforces `bond ≥ MIN_BOND_SATS` on-chain at `submit()` time. This floor ensures disputes are always economically rational — a disputer knows the minimum they can win is worth the cost of challenging.
 
 The protocol doesn't need everyone to be honest — it only needs one honest disputer. That's a much weaker and more realistic assumption.
 
@@ -16,10 +16,10 @@ The protocol doesn't need everyone to be honest — it only needs one honest dis
 
 | Scenario | Asserter | Disputer |
 |---|---|---|
-| Honest claim, no dispute | **+reward** (bond returned + reward paid) | — |
-| Honest claim, wrongly disputed | **+disputer's bond** (extra profit) | **−bond** (punished for lying) |
-| Dishonest claim, no watcher | **+reward** (exploit — requires zero watchers) | — |
-| Dishonest claim, caught | **−bond** (punished) | **+asserter's bond + reward** |
+| Honest claim, no dispute | **bond returned** ✅ | — |
+| Honest claim, wrongly disputed | **+disputer's bond** ✅ | **−bond** (punished for false challenge) |
+| Dishonest claim, no watcher | bond returned (exploit — see Future Work) | — |
+| Dishonest claim, caught | **−bond** (punished) | **+asserter's bond** ✅ |
 
 ---
 

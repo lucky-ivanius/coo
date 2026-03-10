@@ -11,11 +11,11 @@ Trustless Assertion Layer for the Stacks Ecosystem.
 Claims move through a simple state machine:
 
 ```
-REQUESTED → ASSERTED → SETTLED          (happy path, ~99% of cases)
-                     ↘ DISPUTED → RESOLVED_TRUE / RESOLVED_FALSE
+ASSERTED → SETTLED                       (happy path, ~99% of cases)
+         ↘ DISPUTED → SETTLED / REJECTED
 ```
 
-Bond economics enforce honesty. Bonds are denominated in **sBTC**. The protocol requires `bond ≥ 2× reward`, making lying a net loss as long as one honest disputer is watching.
+Bond economics enforce honesty. Bonds are denominated in **sBTC**. The protocol enforces `bond ≥ MIN_BOND_SATS`, making lying a net loss as long as one honest disputer is watching.
 
 ---
 
@@ -23,7 +23,7 @@ Bond economics enforce honesty. Bonds are denominated in **sBTC**. The protocol 
 
 | Name | Role |
 |---|---|
-| **Core** | Stores requests and assertions, owns the block-height clock |
+| **Core** | Stores assertions, owns the block-height clock |
 | **Settlement** | Handles the happy path — checks liveness, releases bonds, writes truth |
 | **Dispute** | Activated on challenge — locks bonds, routes arbiter voting, slashes loser |
 | **Truth Store** | Append-only map of verified results. Read by any consumer via `get-truth` |
@@ -35,8 +35,8 @@ Bond economics enforce honesty. Bonds are denominated in **sBTC**. The protocol 
 Any contract can read a verified result:
 
 ```clarity
-(contract-call? .truth-store get-truth statement-id)
-;; => (some { result: true, asserter: ST1..., settled-at-block: u12345, disputed: false })
+(contract-call? .truth-store get-truth assertion-id)
+;; => (some { asserter: ST1..., settled-at-block: u12345, disputed: false })
 ```
 
 ---
