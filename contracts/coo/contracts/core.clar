@@ -6,29 +6,29 @@
 ;; constants
 
 ;; Protocol parameters
-(define-constant DEFAULT_LIVENESS u144)
+(define-constant DEFAULT_LIVENESS u1440)
 (define-constant MIN_LIVENESS u1)
 (define-constant MIN_BOND_SATS u10000)
 
 ;; Status constants
 (define-constant STATUS_ASSERTED u1)
-(define-constant STATUS_DISPUTED u2)
-(define-constant STATUS_SETTLED u3)
-(define-constant STATUS_REJECTED u4)
+;; (define-constant STATUS_DISPUTED u2)
+;; (define-constant STATUS_SETTLED u3)
+;; (define-constant STATUS_REJECTED u4)
 
 ;; Error codes
 (define-constant ERR_NOT_FOUND (err u100))
 (define-constant ERR_ALREADY_EXISTS (err u101))
-(define-constant ERR_INVALID_STATUS (err u102))
+;; (define-constant ERR_INVALID_STATUS (err u102))
 (define-constant ERR_BOND_TOO_LOW (err u103))
-(define-constant ERR_WINDOW_OPEN (err u104))
-(define-constant ERR_WINDOW_CLOSED (err u105))
-(define-constant ERR_ALREADY_DISPUTED (err u106))
-(define-constant ERR_NOT_ARBITER (err u107))
+;; (define-constant ERR_WINDOW_OPEN (err u104))
+;; (define-constant ERR_WINDOW_CLOSED (err u105))
+;; (define-constant ERR_ALREADY_DISPUTED (err u106))
+;; (define-constant ERR_NOT_ARBITER (err u107))
 (define-constant ERR_SERIALIZATION_FAILED (err u108))
 (define-constant ERR_INVALID_LIVENESS (err u109))
 (define-constant ERR_TRANSFER_FAILED (err u110))
-(define-constant ERR_UNAUTHORIZED (err u401))
+;; (define-constant ERR_UNAUTHORIZED (err u401))
 
 ;; data maps
 

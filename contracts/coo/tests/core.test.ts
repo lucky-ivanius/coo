@@ -15,14 +15,14 @@ describe("Core", () => {
 	const contractName = "coo-core";
 
 	describe("protocol params", () => {
-		it("get-default-liveness returns 144", () => {
+		it("get-default-liveness returns 1440", () => {
 			const { result } = simnet.callReadOnlyFn(
 				contractName,
 				"get-default-liveness",
 				[],
 				deployer,
 			);
-			expect(result).toBeUint(144);
+			expect(result).toBeUint(1440);
 		});
 
 		it("get-min-bond-sats returns 10000", () => {

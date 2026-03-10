@@ -45,7 +45,7 @@ Any contract can read a verified result:
 
 - **Language** — Clarity (Stacks)
 - **Bond token** — sBTC (SIP-010)
-- **Liveness default** — 144 blocks (~24 hrs)
+- **Liveness default** — 1440 blocks (~2 hrs, at ~5s/block)
 - **Arbiter model** — Multisig
 - **Network** — Stacks Testnet
 

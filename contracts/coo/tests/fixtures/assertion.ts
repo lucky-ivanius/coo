@@ -7,7 +7,7 @@ import {
 	UIntCV,
 } from "@stacks/transactions";
 
-export const DEFAULT_LIVENESS = Cl.uint(144);
+export const DEFAULT_LIVENESS = Cl.uint(1440);
 
 export function computeAssertionId(
 	identifierCv: BufferCV,

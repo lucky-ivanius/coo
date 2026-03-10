@@ -11,7 +11,7 @@ COO is composed of four contracts. Each has a single, well-defined responsibilit
 Every interaction starts here. Stores the assertion registry and owns the protocol clock.
 
 - **Assertion Registry** — records who submitted a claim, the hash of the claim, how many sats of sBTC bond they staked, and the liveness window. The full claim is not stored on-chain — only its hash. The full claim is emitted as an event at submission time for off-chain watchers.
-- **Block Timer** — uses Stacks block height as the clock. No external timer, no trusted timestamp. A liveness of 144 blocks is roughly 24 hours.
+- **Block Timer** — uses Stacks block height as the clock. No external timer, no trusted timestamp. Stacks produces fast blocks roughly every 5 seconds (independent of Bitcoin's ~10 min block time), so a liveness of 1440 blocks is roughly 2 hours.
 
 ### Settlement — *The Easy Judge*
 
