@@ -6,7 +6,7 @@ The bond system is what makes honesty the rational choice. All bonds are denomin
 
 ## Bond Rule
 
-The protocol enforces `bond ≥ MIN_BOND_SATS` on-chain at `submit()` time. This floor ensures disputes are always economically rational — a disputer knows the minimum they can win is worth the cost of challenging.
+The protocol enforces `bond ≥ MIN_BOND_SATS` on-chain at `assert()` time. This floor ensures disputes are always economically rational — a disputer knows the minimum they can win is worth the cost of challenging.
 
 The protocol doesn't need everyone to be honest — it only needs one honest disputer. That's a much weaker and more realistic assumption.
 

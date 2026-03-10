@@ -54,7 +54,7 @@ sequenceDiagram
     participant D as Disputer
     participant G as Arbiters
 
-    A->>OO: submit(identifier, claim, bond-sats, liveness?)
+    A->>OO: assert(identifier, claim, bond-sats, liveness?)
     Note over OO: assertionId = sha256(identifier ++ claim ++ bond-sats ++ liveness)<br/>claim-hash stored on-chain · full claim emitted as event<br/>liveness = provided value or DEFAULT_LIVENESS<br/>sBTC bond transferred from asserter · Status: ASSERTED
 
     alt No dispute within liveness window
