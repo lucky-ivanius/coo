@@ -40,6 +40,7 @@
   (buff 32)
   {
     asserter: principal,
+    disputer: (optional principal),
     claim-hash: (buff 32),
     bond-sats: uint,
     liveness: uint,
@@ -130,6 +131,7 @@
       ))
       (map-set assertion-map assertion-id {
         asserter: tx-sender,
+        disputer: none,
         claim-hash: (sha256 claim),
         bond-sats: bond-sats,
         asserted-at-block: asserted-at-block,
@@ -202,9 +204,23 @@
       ERR_WINDOW_CLOSED
     )
 
-    (let ((disputed-at-block stacks-block-height))
+    (let (
+        (bond-sats (get bond-sats assertion))
+        (disputed-at-block stacks-block-height)
+      )
+      (try! (restrict-assets? contract-caller ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
+        bond-sats
+      ))
+        (unwrap!
+          (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
+            transfer bond-sats contract-caller current-contract none
+          )
+          ERR_TRANSFER_FAILED
+        )
+      ))
       (map-set assertion-map assertion-id
         (merge assertion {
+          disputer: (some tx-sender),
           status: STATUS_DISPUTED,
           disputed-at-block: (some disputed-at-block),
         })
