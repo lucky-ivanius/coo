@@ -4,6 +4,12 @@ import { Cl, ClarityType } from "@stacks/transactions";
 
 export const DEFAULT_LIVENESS = Cl.uint(1440);
 
+// Status codes
+export const STATUS_ASSERTED = Cl.uint(1);
+export const STATUS_DISPUTED = Cl.uint(2);
+export const STATUS_SETTLED = Cl.uint(3);
+export const STATUS_REJECTED = Cl.uint(4);
+
 // Error codes
 export const ERR_ASSERTION_ALREADY_EXISTS = Cl.uint(409100);
 export const ERR_ASSERTION_BOND_TOO_LOW = Cl.uint(400103);
