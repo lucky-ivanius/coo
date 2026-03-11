@@ -1,0 +1,16 @@
+{
+  "name": "@coo/utils",
+  "module": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.0.1",
+    "@stacks/transactions": "7.3.1"
+  }
+}

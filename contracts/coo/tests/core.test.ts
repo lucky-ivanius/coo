@@ -13,7 +13,9 @@ import {
   ERR_WINDOW_OPEN,
   STATUS_DISPUTED,
   STATUS_SETTLED,
-} from "./fixtures/assertion";
+} from "@coo/utils";
+
+import { resolveLiveness } from "./fixtures/assertion";
 
 const accounts = simnet.getAccounts();
 const deployer = accounts.get("deployer")!;
@@ -42,7 +44,7 @@ describe("Core", () => {
   describe("assert", () => {
     it("stores assertion and transfers sBTC bond when liveness is omitted (defaults to DEFAULT_LIVENESS)", () => {
       const liveness = Cl.none();
-      const expectedId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const expectedId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       const balanceBefore = simnet.callReadOnlyFn(sbtcToken, "get-balance", [Cl.standardPrincipal(wallet1)], wallet1);
 
       const { result } = simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
@@ -55,7 +57,7 @@ describe("Core", () => {
 
     it("returns expected assertionId when explicit liveness is provided", () => {
       const liveness = Cl.some(Cl.uint(200));
-      const expectedId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const expectedId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
 
       const { result } = simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
 
@@ -89,8 +91,8 @@ describe("Core", () => {
       const liveness = Cl.none();
       const assertedAtBlock = Cl.uint(simnet.blockHeight + 1);
 
-      const expectedId1 = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, assertedAtBlock);
-      const expectedId2 = computeAssertionId(id2, claim, Cl.uint(10_000), liveness, assertedAtBlock);
+      const expectedId1 = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), assertedAtBlock);
+      const expectedId2 = computeAssertionId(id2, claim, Cl.uint(10_000), resolveLiveness(liveness), assertedAtBlock);
 
       const [result1, result2] = simnet.mineBlock([
         tx.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1),
@@ -106,7 +108,7 @@ describe("Core", () => {
   describe("settle", () => {
     it("settles assertion, updates status to SETTLED (u3), and returns bond to asserter", () => {
       const liveness = Cl.some(Cl.uint(1));
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
       const balanceBefore = simnet.callReadOnlyFn(sbtcToken, "get-balance", [Cl.standardPrincipal(wallet1)], wallet1);
       simnet.mineEmptyBlocks(2);
@@ -133,7 +135,7 @@ describe("Core", () => {
 
     it("rejects with ERR_WINDOW_OPEN when liveness window has not yet closed", () => {
       const liveness = Cl.none();
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
 
       const { result } = simnet.callPublicFn(contractName, "settle", [assertionId], deployer);
@@ -142,7 +144,7 @@ describe("Core", () => {
 
     it("rejects with ERR_INVALID_STATUS when already settled", () => {
       const liveness = Cl.some(Cl.uint(1));
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
       simnet.mineEmptyBlocks(2);
       simnet.callPublicFn(contractName, "settle", [assertionId], deployer);
@@ -153,7 +155,7 @@ describe("Core", () => {
 
     it("rejects with ERR_INVALID_STATUS when assertion is disputed", () => {
       const liveness = Cl.some(Cl.uint(1));
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
       simnet.callPublicFn(contractName, "dispute", [assertionId], wallet2);
       simnet.mineEmptyBlocks(2);
@@ -166,7 +168,7 @@ describe("Core", () => {
   describe("dispute", () => {
     it("disputes assertion, updates status to DISPUTED (u2), records disputer, and transfers bond to contract", () => {
       const liveness = Cl.some(Cl.uint(1));
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
       const balanceBefore = simnet.callReadOnlyFn(sbtcToken, "get-balance", [Cl.standardPrincipal(wallet2)], wallet2);
 
@@ -195,7 +197,7 @@ describe("Core", () => {
 
     it("rejects with ERR_WINDOW_CLOSED after liveness window has elapsed", () => {
       const liveness = Cl.some(Cl.uint(1));
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
       simnet.mineEmptyBlocks(2);
 
@@ -205,7 +207,7 @@ describe("Core", () => {
 
     it("rejects with ERR_INVALID_STATUS when assertion is already disputed", () => {
       const liveness = Cl.some(Cl.uint(1));
-      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const assertionId = computeAssertionId(identifier, claim, Cl.uint(10_000), resolveLiveness(liveness), Cl.uint(simnet.blockHeight + 1));
       simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
       simnet.callPublicFn(contractName, "dispute", [assertionId], wallet2);
 
