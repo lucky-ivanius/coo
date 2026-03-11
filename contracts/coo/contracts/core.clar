@@ -46,6 +46,10 @@
 
 ;; private functions
 
+(define-private (is-window-closed (expiry-block uint))
+  (>= stacks-block-height expiry-block)
+)
+
 (define-private (derive-assertion-id
     (identifier (buff 32))
     (claim (buff 2048))
@@ -74,14 +78,6 @@
 
 (define-read-only (get-assertion (assertion-id (buff 32)))
   (map-get? assertion-map assertion-id)
-)
-
-(define-read-only (is-liveness-expired (assertion-id (buff 32)))
-  (let ((assertion-entry (unwrap! (map-get? assertion-map assertion-id) ERR_NOT_FOUND)))
-    (ok (>= stacks-block-height
-      (+ (get asserted-at-block assertion-entry) (get liveness assertion-entry))
-    ))
-  )
 )
 
 ;; public functions
