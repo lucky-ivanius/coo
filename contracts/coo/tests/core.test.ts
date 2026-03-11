@@ -87,18 +87,19 @@ describe("Core", () => {
     it("different identifier with same claim produces different assertionIds — both succeed", () => {
       const id2 = Cl.bufferFromHex("bb".repeat(32));
       const liveness = Cl.none();
+      const assertedAtBlock = Cl.uint(simnet.blockHeight + 1);
 
-      const expectedId1 = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
+      const expectedId1 = computeAssertionId(identifier, claim, Cl.uint(10_000), liveness, assertedAtBlock);
+      const expectedId2 = computeAssertionId(id2, claim, Cl.uint(10_000), liveness, assertedAtBlock);
 
-      const { result: result1 } = simnet.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1);
-
-      const expectedId2 = computeAssertionId(id2, claim, Cl.uint(10_000), liveness, Cl.uint(simnet.blockHeight + 1));
-
-      const { result: result2 } = simnet.callPublicFn(contractName, "assert", [id2, claim, Cl.uint(10_000), liveness], wallet2);
+      const [result1, result2] = simnet.mineBlock([
+        tx.callPublicFn(contractName, "assert", [identifier, claim, Cl.uint(10_000), liveness], wallet1),
+        tx.callPublicFn(contractName, "assert", [id2, claim, Cl.uint(10_000), liveness], wallet2),
+      ]);
 
       expect(expectedId1).not.toEqual(expectedId2);
-      expect(result1).toBeOk(expectedId1);
-      expect(result2).toBeOk(expectedId2);
+      expect(result1.result).toBeOk(expectedId1);
+      expect(result2.result).toBeOk(expectedId2);
     });
   });
 
