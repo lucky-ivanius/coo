@@ -119,12 +119,12 @@
         ERR_ASSERTION_ALREADY_EXISTS
       )
       (asserts! (>= bond-sats MIN_BOND_SATS) ERR_ASSERTION_BOND_TOO_LOW)
-      (try! (restrict-assets? contract-caller ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
+      (try! (restrict-assets? tx-sender ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
         bond-sats
       ))
         (unwrap!
           (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-            transfer bond-sats contract-caller current-contract none
+            transfer bond-sats tx-sender current-contract none
           )
           ERR_TRANSFER_FAILED
         )
@@ -208,12 +208,12 @@
         (bond-sats (get bond-sats assertion))
         (disputed-at-block stacks-block-height)
       )
-      (try! (restrict-assets? contract-caller ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
+      (try! (restrict-assets? tx-sender ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
         bond-sats
       ))
         (unwrap!
           (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-            transfer bond-sats contract-caller current-contract none
+            transfer bond-sats tx-sender current-contract none
           )
           ERR_TRANSFER_FAILED
         )
