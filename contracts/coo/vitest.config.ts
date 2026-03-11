@@ -1,8 +1,5 @@
+import { getClarinetVitestsArgv, vitestSetupFilePath } from "@stacks/clarinet-sdk/vitest";
 import { defineConfig } from "vitest/config";
-import {
-	vitestSetupFilePath,
-	getClarinetVitestsArgv,
-} from "@stacks/clarinet-sdk/vitest";
 
 /*
   In this file, Vitest is configured so that it works seamlessly with Clarinet and the Simnet.
@@ -20,22 +17,22 @@ import {
 */
 
 export default defineConfig({
-	test: {
-		// use vitest-environment-clarinet
-		environment: "clarinet",
-		pool: "forks",
-		// clarinet handles test isolation by resetting the simnet between tests
-		isolate: false,
-		maxWorkers: 1,
-		setupFiles: [
-			vitestSetupFilePath,
-			// custom setup files can be added here
-		],
-		environmentOptions: {
-			clarinet: {
-				...getClarinetVitestsArgv(),
-				// add or override options
-			},
-		},
-	},
+  test: {
+    // use vitest-environment-clarinet
+    environment: "clarinet",
+    pool: "forks",
+    // clarinet handles test isolation by resetting the simnet between tests
+    isolate: false,
+    maxWorkers: 1,
+    setupFiles: [
+      vitestSetupFilePath,
+      // custom setup files can be added here
+    ],
+    environmentOptions: {
+      clarinet: {
+        ...getClarinetVitestsArgv(),
+        // add or override options
+      },
+    },
+  },
 });
