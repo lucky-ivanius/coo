@@ -92,7 +92,7 @@
 )
 
 (define-read-only (is-window-closed (expiry-block uint))
-  (>= stacks-block-height expiry-block)
+  (> stacks-block-height expiry-block)
 )
 
 ;; public functions
