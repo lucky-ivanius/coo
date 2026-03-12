@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV_LINKS = [
   { label: "Verify", href: "/" },
@@ -54,8 +54,11 @@ export function Header() {
               <HugeiconsIcon icon={Menu01Icon} strokeWidth={1.5} className="size-5" />
             </SheetTrigger>
 
-            <SheetContent side="right" className="w-64 pt-12">
-              <nav className="flex flex-col gap-1 px-2 pt-4">
+            <SheetContent side="right" className="w-64">
+              <SheetHeader className="border-border/60 border-b">
+                <Logo />
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 px-2 pt-2">
                 {NAV_LINKS.map((link) => (
                   <NavLink key={link.href} {...link} />
                 ))}
