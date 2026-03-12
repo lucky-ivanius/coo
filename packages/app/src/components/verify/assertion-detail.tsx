@@ -65,7 +65,7 @@ export function AssertionDetail({ assertion, timeLeft, onDispute, onSettle, onCl
   const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && timeLeft === 0;
   const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && timeLeft !== null && timeLeft > 0;
 
-  const identifierText = bytesToText(assertion.identifier);
+  const identifierText = `0x${bytesToHex(assertion.identifier)}`;
 
   return (
     <SheetContent side="right" className="flex flex-col gap-0 p-0 lg:w-[40vw] lg:max-w-[40vw]!">
@@ -89,7 +89,7 @@ export function AssertionDetail({ assertion, timeLeft, onDispute, onSettle, onCl
           {claimView === "text" ? (
             <p className="text-foreground text-sm leading-relaxed">{bytesToText(assertion.claim)}</p>
           ) : (
-            <code className="block break-all rounded-md bg-muted px-3 py-2.5 font-mono text-muted-foreground text-xs">{bytesToHex(assertion.claim)}</code>
+            <code className="block break-all rounded-md bg-muted px-3 py-2.5 font-mono text-muted-foreground text-xs">0x{bytesToHex(assertion.claim)}</code>
           )}
         </div>
 
