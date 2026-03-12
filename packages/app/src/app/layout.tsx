@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import "./globals.css";
 import type { PropsWithChildren } from "react";
 
+import { Header } from "@/components/header";
 import { Providers } from "@/components/providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -23,7 +24,10 @@ export default function Layout({ children }: PropsWithChildren) {
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <Providers>
-        <body className={cn([jetBrainsMono.variable, "antialiased"])}>{children}</body>
+        <body className={cn([jetBrainsMono.variable, "antialiased"])}>
+          <Header />
+          {children}
+        </body>
       </Providers>
     </html>
   );
