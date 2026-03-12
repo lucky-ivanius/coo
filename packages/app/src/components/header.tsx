@@ -1,11 +1,15 @@
+"use client";
+
 import { ArrowUpRight01Icon, Menu01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { label: "Verify", href: "/" },
@@ -14,12 +18,17 @@ const NAV_LINKS = [
 ];
 
 function NavLink({ label, href, external }: (typeof NAV_LINKS)[number]) {
+  const pathname = usePathname();
+
   return (
     <Link
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="flex items-center gap-1 rounded-md px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
+      className={cn(
+        "flex items-center gap-1 rounded-md px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:text-primary/70",
+        !external && pathname === href && "text-primary"
+      )}
     >
       {label}
       {external && <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={1.5} className="size-3.5 opacity-50" />}
