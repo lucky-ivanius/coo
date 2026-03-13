@@ -26,7 +26,7 @@ function NavLink({ label, href, external }: (typeof NAV_LINKS)[number]) {
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       className={cn(
-        "flex items-center gap-1 rounded-md px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:text-primary/70",
+        "flex items-center gap-1 rounded-md px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:text-primary/80",
         !external && pathname === href && "text-primary"
       )}
     >
