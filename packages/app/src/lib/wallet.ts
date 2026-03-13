@@ -1,3 +1,3 @@
-export function truncateWallet(id: string): string {
-  return `${id.slice(0, 6)}...${id.slice(-6)}`;
+export function truncateAddress(address: string): string {
+  return `${address.slice(0, 8)}...${address.slice(-4)}`;
 }
