@@ -9,7 +9,7 @@ export type ClaimView = "text" | "hex";
 export function ClaimToggle({ view, onChange }: { view: ClaimView; onChange: (v: ClaimView) => void }) {
   return (
     <ButtonGroup>
-      {(["text", "hex"] as ClaimView[]).map((v, i) => (
+      {(["text", "hex"] as ClaimView[]).map((v) => (
         <Button
           key={v}
           type="button"
