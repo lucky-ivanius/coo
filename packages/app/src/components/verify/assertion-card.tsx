@@ -45,7 +45,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
 
   return (
     <>
-      <Card onClick={() => setDetailOpen(true)} className="cursor-pointer gap-2 transition-shadow hover:shadow-md">
+      <Card onClick={() => setDetailOpen(true)} className="cursor-pointer gap-2 py-5 transition-shadow hover:shadow-md">
         <CardHeader>
           <CardDescription>{awaitingSettlement ? <AwaitingSettlementBadge /> : <StatusBadge status={assertion.status} />}</CardDescription>
         </CardHeader>
