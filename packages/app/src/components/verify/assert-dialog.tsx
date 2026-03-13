@@ -7,8 +7,10 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { NumberInput } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { blocksToHuman } from "@/lib/assertion";
+
+import { InputGroup, InputGroupAddon, InputGroupNumberInput, InputGroupText } from "../ui/input-group";
 
 const SATS_PER_SBTC = 100_000_000;
 
@@ -92,17 +94,19 @@ export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid || undefined}>
-                  <FieldLabel htmlFor="assert-bond">
-                    Bond <span className="font-normal text-muted-foreground">(sats)</span>
-                  </FieldLabel>
+                  <FieldLabel htmlFor="assert-bond">Bond</FieldLabel>
 
-                  <NumberInput {...field} min={1} step={1} placeholder="10000" aria-invalid={fieldState.invalid || undefined} />
+                  <InputGroup>
+                    <InputGroupNumberInput {...field} min={1} step={1} placeholder="10000" aria-invalid={fieldState.invalid || undefined} />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupText>sats</InputGroupText>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 
                   <FieldDescription>
                     ≈ {(Number(form.watch("bondSats") ?? 0) / SATS_PER_SBTC).toLocaleString(undefined, { maximumFractionDigits: 8 })} sBTC
                   </FieldDescription>
-
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -114,14 +118,20 @@ export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid || undefined}>
                   <FieldLabel htmlFor="assert-liveness">
-                    Liveness <span className="font-normal text-muted-foreground">(Default: 1440 blocks = ~2 hours)</span>
+                    Liveness <span className="font-normal text-muted-foreground">(optional)</span>
                   </FieldLabel>
 
-                  <NumberInput {...field} type="number" min={1} step={1} placeholder="1440" aria-invalid={fieldState.invalid || undefined} />
-
-                  <FieldDescription>Number of blocks the assertion can be disputed before settlement.</FieldDescription>
-
+                  <InputGroup>
+                    <InputGroupNumberInput {...field} min={1} step={1} placeholder="1440" aria-invalid={fieldState.invalid || undefined} />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupText>blocks</InputGroupText>
+                    </InputGroupAddon>
+                  </InputGroup>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+
+                  <FieldDescription>Expires in {blocksToHuman(field.value ?? 1440)}</FieldDescription>
+
+                  {/*<FieldDescription>Number of blocks the assertion can be disputed before settlement.</FieldDescription>*/}
                 </Field>
               )}
             />
