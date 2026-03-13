@@ -3,6 +3,7 @@
 import type { Assertion } from "@/types/assertion";
 import { AssertionCard } from "@/components/verify/assertion-card";
 import { useMockBlockHeight } from "@/hooks/use-mock-block-height";
+import { useWallet } from "@/hooks/use-wallet";
 import { MOCK_ASSERTIONS } from "@/lib/mock-data";
 
 export interface AssertionListProps {
@@ -11,19 +12,10 @@ export interface AssertionListProps {
    * TODO: Replace with data fetched from the Stacks API / indexer in integration.
    */
   assertions?: Assertion[];
-  /**
-   * Called when the user initiates a dispute on an assertion.
-   * TODO: Wire to contract `dispute()` call in integration.
-   */
-  onDispute?: (assertionId: string) => void;
-  /**
-   * Called when the user initiates settlement on an assertion.
-   * TODO: Wire to contract `settle()` call in integration.
-   */
-  onSettle?: (assertionId: string) => void;
 }
 
-export function AssertionList({ assertions = MOCK_ASSERTIONS, onDispute, onSettle }: AssertionListProps) {
+export function AssertionList({ assertions = MOCK_ASSERTIONS }: AssertionListProps) {
+  const { connected, connect } = useWallet();
   // TODO: Replace with real Stacks block watcher in integration.
   const currentBlock = useMockBlockHeight();
 
@@ -36,10 +28,22 @@ export function AssertionList({ assertions = MOCK_ASSERTIONS, onDispute, onSettl
     );
   }
 
+  const handleDispute = (assertionId: string) => {
+    if (!connected) return connect();
+
+    window.alert(`Disputing assertion ${assertionId}`);
+  };
+
+  const handleSettle = (assertionId: string) => {
+    if (!connected) return connect();
+
+    window.alert(`Settling assertion ${assertionId}`);
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4">
       {assertions.map((assertion) => (
-        <AssertionCard key={assertion.id} assertion={assertion} currentBlock={currentBlock} onDispute={onDispute} onSettle={onSettle} />
+        <AssertionCard key={assertion.id} assertion={assertion} currentBlock={currentBlock} onDispute={handleDispute} onSettle={handleSettle} />
       ))}
     </div>
   );

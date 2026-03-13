@@ -65,10 +65,9 @@ export interface AssertionDetailProps {
    * TODO: Wire to contract `settle()` call in integration.
    */
   onSettle?: (assertionId: string) => void;
-  onClose: () => void;
 }
 
-export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle, onClose }: AssertionDetailProps) {
+export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
   const [claimView, setClaimView] = useState<ClaimView>("text");
 
   const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft === 0;
