@@ -11,7 +11,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
-import { bytesToText, formatCountdown } from "@/lib/assertion";
+import { bytesToText } from "@/lib/assertion";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 export interface AssertionCardProps {
@@ -35,10 +35,10 @@ export interface AssertionCardProps {
 
 export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: AssertionCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
-  const timeLeft = useAssertionCountdown(assertion, currentBlock);
+  const blocksLeft = useAssertionCountdown(assertion, currentBlock);
 
-  const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && timeLeft === 0;
-  const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && timeLeft !== null && timeLeft > 0;
+  const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft === 0;
+  const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft !== null && blocksLeft > 0;
   const disputed = assertion.status === ASSERTION_STATUS.DISPUTED;
   const settled = assertion.status === ASSERTION_STATUS.SETTLED;
   const rejected = assertion.status === ASSERTION_STATUS.REJECTED;
@@ -73,7 +73,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
               </Button>
               <div className="flex items-center gap-1.5 font-mono text-muted-foreground text-xs">
                 <HugeiconsIcon icon={HourglassIcon} className="size-3.5 shrink-0" strokeWidth={1.5} />
-                <span className="tabular-nums">{formatCountdown(timeLeft)}</span>
+                <span className="tabular-nums">{blocksLeft} blocks</span>
               </div>
             </>
           )}
@@ -113,7 +113,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
       </Card>
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} timeLeft={timeLeft} onDispute={onDispute} onSettle={onSettle} onClose={() => setDetailOpen(false)} />
+        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={onDispute} onSettle={onSettle} onClose={() => setDetailOpen(false)} />
       </Sheet>
     </>
   );

@@ -1,41 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import type { Assertion } from "@/types/assertion";
-import { BLOCK_TIME_MS, getExpiryBlock } from "@/lib/assertion";
+import { getExpiryBlock } from "@/lib/assertion";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 /**
- * Returns a live countdown in milliseconds for an ASSERTED assertion's liveness window.
+ * Returns blocks remaining in an ASSERTED assertion's liveness window.
  *
- * - `null`  → not yet initialised (SSR / first render)
+ * - `null`  → assertion is not in ASSERTED status
  * - `0`     → window has expired (awaiting settlement)
- * - `> 0`   → milliseconds remaining in the dispute window
+ * - `> 0`   → blocks remaining in the dispute window
  *
- * TODO: In integration, derive the actual expiry timestamp from block timestamps
- * via the Stacks API instead of approximating with BLOCK_TIME_MS from Date.now().
+ * Reacts to `currentBlock` updates from the block watcher.
  */
 export function useAssertionCountdown(assertion: Assertion, currentBlock: number): number | null {
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  if (assertion.status !== ASSERTION_STATUS.ASSERTED) return null;
 
-  useEffect(() => {
-    if (assertion.status !== ASSERTION_STATUS.ASSERTED) return;
-
-    const blocksRemaining = getExpiryBlock(assertion) - currentBlock;
-
-    if (blocksRemaining <= 0) {
-      setTimeLeft(0);
-      return;
-    }
-
-    const expiresAt = Date.now() + blocksRemaining * BLOCK_TIME_MS;
-    const tick = () => setTimeLeft(Math.max(0, expiresAt - Date.now()));
-
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [assertion, currentBlock]);
-
-  return timeLeft;
+  const blocksRemaining = getExpiryBlock(assertion) - currentBlock;
+  return Math.max(0, blocksRemaining);
 }

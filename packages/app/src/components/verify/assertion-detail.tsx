@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ClaimToggle } from "@/components/verify/claim-toggle";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
-import { blocksToHuman, bytesToHex, bytesToText, formatCountdown, satsToSbtc, truncateId } from "@/lib/assertion";
+import { blocksToHuman, bytesToHex, bytesToText, satsToSbtc, truncateId } from "@/lib/assertion";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 // ── Meta row ─────────────────────────────────────────────────────────────────
@@ -44,10 +44,10 @@ function LivenessMeta({ assertion }: { assertion: Assertion }) {
 export interface AssertionDetailProps {
   assertion: Assertion;
   /**
-   * Countdown in ms from useAssertionCountdown.
-   * null = not yet initialised; 0 = window expired.
+   * Blocks remaining from useAssertionCountdown.
+   * null = not ASSERTED; 0 = window expired.
    */
-  timeLeft: number | null;
+  blocksLeft: number | null;
   /**
    * TODO: Wire to contract `dispute()` call in integration.
    */
@@ -59,11 +59,11 @@ export interface AssertionDetailProps {
   onClose: () => void;
 }
 
-export function AssertionDetail({ assertion, timeLeft, onDispute, onSettle, onClose }: AssertionDetailProps) {
+export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle, onClose }: AssertionDetailProps) {
   const [claimView, setClaimView] = useState<ClaimView>("text");
 
-  const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && timeLeft === 0;
-  const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && timeLeft !== null && timeLeft > 0;
+  const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft === 0;
+  const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft !== null && blocksLeft > 0;
 
   const identifierText = `0x${bytesToHex(assertion.identifier)}`;
 
@@ -126,9 +126,9 @@ export function AssertionDetail({ assertion, timeLeft, onDispute, onSettle, onCl
             </MetaRow>
           )}
 
-          {canDispute && timeLeft !== null && timeLeft > 0 && (
+          {canDispute && blocksLeft !== null && blocksLeft > 0 && (
             <MetaRow icon={HourglassIcon} label="Dispute window closes in">
-              <p className="font-medium font-mono text-foreground text-sm tabular-nums">{formatCountdown(timeLeft)}</p>
+              <p className="font-medium font-mono text-foreground text-sm tabular-nums">{blocksLeft.toLocaleString()} blocks</p>
             </MetaRow>
           )}
 

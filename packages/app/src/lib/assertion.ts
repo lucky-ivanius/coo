@@ -27,18 +27,6 @@ export function truncateId(id: string): string {
   return `${id.slice(0, 8)}...${id.slice(-8)}`;
 }
 
-export function formatCountdown(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const days = Math.floor(totalSeconds / 86_400);
-  const hours = Math.floor((totalSeconds % 86_400) / 3_600);
-  const minutes = Math.floor((totalSeconds % 3_600) / 60);
-  const seconds = totalSeconds % 60;
-  const hh = hours.toString().padStart(2, "0");
-  const mm = minutes.toString().padStart(2, "0");
-  const ss = seconds.toString().padStart(2, "0");
-  return days > 0 ? `${days}d ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
-}
-
 /** Converts blocks to a human-readable duration at ~5s per Stacks block. */
 export function blocksToHuman(blocks: number): string {
   const seconds = blocks * 5;
