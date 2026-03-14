@@ -5,6 +5,8 @@ import type { AssertionStatus } from "@/types/assertion";
 import { cn } from "@/lib/utils";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
+import { Badge } from "../ui/badge";
+
 const STATUS_CONFIG = {
   [ASSERTION_STATUS.ASSERTED]: {
     label: "Open",
@@ -31,18 +33,18 @@ const STATUS_CONFIG = {
 export function StatusBadge({ status }: { status: AssertionStatus }) {
   const config = STATUS_CONFIG[status];
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-medium text-xs", config.className)}>
+    <Badge className={config.className}>
       <HugeiconsIcon icon={config.icon} className="size-3" strokeWidth={2} />
       {config.label}
-    </span>
+    </Badge>
   );
 }
 
 export function AwaitingSettlementBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 font-medium text-amber-700 text-xs dark:bg-amber-900/30 dark:text-amber-400">
+    <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
       <HugeiconsIcon icon={Clock01Icon} className="size-3" strokeWidth={2} />
       Awaiting Settlement
-    </span>
+    </Badge>
   );
 }

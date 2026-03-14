@@ -5,11 +5,15 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
+import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
+import { truncateAddress } from "@/lib/wallet";
+
+import { ConnectWalletButton } from "./connect-wallet-button";
+import { WalletProfileDialog } from "./wallet-profile-dialog";
 
 const NAV_LINKS = [
   { label: "Verify", href: "/" },
@@ -37,11 +41,12 @@ function NavLink({ label, href, external }: (typeof NAV_LINKS)[number]) {
 }
 
 export function Header() {
+  const { connected } = useWallet();
+
   return (
     <header className="sticky top-0 z-40 w-full border-border/60 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
-
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => (
@@ -50,13 +55,11 @@ export function Header() {
         </nav>
 
         {/* Desktop: connect wallet */}
-        <div className="hidden md:flex">
-          <ConnectWalletButton />
-        </div>
+        <div className="hidden md:flex">{connected ? <WalletProfileDialog /> : <ConnectWalletButton />}</div>
 
         {/* Mobile: connect wallet + hamburger */}
         <div className="flex items-center gap-2 md:hidden">
-          <ConnectWalletButton size="sm" />
+          {connected ? <WalletProfileDialog size="sm" /> : <ConnectWalletButton size="sm" />}
 
           <Sheet>
             <SheetTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Open menu" />}>

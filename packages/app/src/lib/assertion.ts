@@ -19,10 +19,6 @@ export function satsToSbtc(sats: number): string {
   return (sats / SATS_PER_BTC).toFixed(8).replace(/\.?0+$/, "");
 }
 
-export function truncateAddress(address: string): string {
-  return `${address.slice(0, 8)}...${address.slice(-4)}`;
-}
-
 export function truncateId(id: string): string {
   return `${id.slice(0, 8)}...${id.slice(-8)}`;
 }

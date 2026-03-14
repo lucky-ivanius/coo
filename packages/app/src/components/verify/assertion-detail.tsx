@@ -1,7 +1,16 @@
 "use client";
 
 import type { IconSvgElement } from "@hugeicons/react";
-import { Alert01Icon, BitcoinShieldIcon, CheckmarkCircle02Icon, Clock01Icon, HourglassIcon, InformationCircleIcon, UserIcon } from "@hugeicons/core-free-icons";
+import {
+  Alert01Icon,
+  BitcoinShieldIcon,
+  Blockchain01Icon,
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  HourglassIcon,
+  InformationCircleIcon,
+  UserIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useState } from "react";
 
@@ -56,10 +65,9 @@ export interface AssertionDetailProps {
    * TODO: Wire to contract `settle()` call in integration.
    */
   onSettle?: (assertionId: string) => void;
-  onClose: () => void;
 }
 
-export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle, onClose }: AssertionDetailProps) {
+export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
   const [claimView, setClaimView] = useState<ClaimView>("text");
 
   const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft === 0;
@@ -116,6 +124,10 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle, on
             <p className="cursor-default break-all font-mono text-sm" title={assertion.asserter}>
               {assertion.asserter}
             </p>
+          </MetaRow>
+
+          <MetaRow icon={Blockchain01Icon} label="Asserted at block">
+            <p className="cursor-default break-all font-mono text-sm">{assertion.assertedAtBlock.toLocaleString()}</p>
           </MetaRow>
 
           {assertion.disputer && (
