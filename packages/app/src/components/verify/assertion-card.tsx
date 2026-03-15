@@ -113,7 +113,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
       </Card>
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={onDispute} onSettle={onSettle} onClose={() => setDetailOpen(false)} />
+        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={onDispute} onSettle={onSettle} />
       </Sheet>
     </>
   );
