@@ -17,7 +17,8 @@ import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
-import { blocksToHuman, satsToSbtc, truncateId } from "@/lib/assertion";
+import { blocksToHuman, truncateId } from "@/lib/assertion";
+import { formatSbtc } from "@/lib/format";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 // ── Meta row ─────────────────────────────────────────────────────────────────
@@ -109,7 +110,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
           <MetaRow icon={BitcoinShieldIcon} label="Bond">
             <p className="text-sm">
               <span className="font-medium">{assertion.bondSats.toLocaleString()} sats</span>
-              <span className="text-muted-foreground"> · {satsToSbtc(assertion.bondSats)} sBTC</span>
+              <span className="text-muted-foreground"> · {formatSbtc(assertion.bondSats)} sBTC</span>
             </p>
           </MetaRow>
 
