@@ -142,6 +142,7 @@
         ERR_ASSERTION_INVALID_LIVENESS
       )
     )
+    (asserts! (>= bond-sats MIN_BOND_SATS) ERR_ASSERTION_BOND_TOO_LOW)
     (let (
         (asserted-at-block stacks-block-height)
         (assertion-id (try! (derive-assertion-id identifier claim bond-sats resolved-liveness
@@ -151,7 +152,6 @@
       (asserts! (is-none (map-get? assertion-map assertion-id))
         ERR_ASSERTION_ALREADY_EXISTS
       )
-      (asserts! (>= bond-sats MIN_BOND_SATS) ERR_ASSERTION_BOND_TOO_LOW)
       (try! (restrict-assets? contract-caller ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
         bond-sats
       ))
