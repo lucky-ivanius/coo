@@ -289,7 +289,7 @@
     (let (
         (bond-sats (get bond-sats assertion))
         (asserter (get asserter assertion))
-        (disputer (unwrap! (get disputer assertion) ERR_ASSERTION_NOT_FOUND))
+        (disputer (unwrap! (get disputer assertion) ERR_INVALID_STATUS))
         (resolved-at-block stacks-block-height)
       )
       (if (is-eq resolve-status STATUS_SETTLED)
