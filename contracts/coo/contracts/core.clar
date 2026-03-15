@@ -114,7 +114,7 @@
 
 (define-public (add-arbiter (address principal))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
+    (asserts! (is-eq contract-caller CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
     (asserts! (is-none (map-get? arbiter-map address)) ERR_ARBITER_ALREADY_EXISTS)
     (ok (map-set arbiter-map address true))
   )
@@ -122,7 +122,7 @@
 
 (define-public (remove-arbiter (address principal))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
+    (asserts! (is-eq contract-caller CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
     (asserts! (is-some (map-get? arbiter-map address)) ERR_ARBITER_NOT_FOUND)
     (ok (map-delete arbiter-map address))
   )
@@ -152,18 +152,18 @@
         ERR_ASSERTION_ALREADY_EXISTS
       )
       (asserts! (>= bond-sats MIN_BOND_SATS) ERR_ASSERTION_BOND_TOO_LOW)
-      (try! (restrict-assets? tx-sender ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
+      (try! (restrict-assets? contract-caller ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
         bond-sats
       ))
         (unwrap!
           (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-            transfer bond-sats tx-sender current-contract none
+            transfer bond-sats contract-caller current-contract none
           )
           ERR_TRANSFER_FAILED
         )
       ))
       (map-set assertion-map assertion-id {
-        asserter: tx-sender,
+        asserter: contract-caller,
         disputer: none,
         claim-hash: (sha256 claim),
         bond-sats: bond-sats,
@@ -242,19 +242,19 @@
         (bond-sats (get bond-sats assertion))
         (disputed-at-block stacks-block-height)
       )
-      (try! (restrict-assets? tx-sender ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
+      (try! (restrict-assets? contract-caller ((with-ft 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token "sbtc-token"
         bond-sats
       ))
         (unwrap!
           (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-            transfer bond-sats tx-sender current-contract none
+            transfer bond-sats contract-caller current-contract none
           )
           ERR_TRANSFER_FAILED
         )
       ))
       (map-set assertion-map assertion-id
         (merge assertion {
-          disputer: (some tx-sender),
+          disputer: (some contract-caller),
           status: STATUS_DISPUTED,
           disputed-at-block: (some disputed-at-block),
         })
@@ -275,7 +275,7 @@
 
 (define-public (resolve (assertion-id (buff 32)) (resolve-status uint))
   (let ((assertion (unwrap! (map-get? assertion-map assertion-id) ERR_ASSERTION_NOT_FOUND)))
-    (asserts! (is-some (map-get? arbiter-map tx-sender)) ERR_NOT_ARBITER)
+    (asserts! (is-some (map-get? arbiter-map contract-caller)) ERR_NOT_ARBITER)
     (asserts! (is-eq (get status assertion) STATUS_DISPUTED) ERR_INVALID_STATUS)
     (asserts!
       (or
