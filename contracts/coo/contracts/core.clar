@@ -54,6 +54,7 @@
     disputed-at-block: (optional uint),
     settled-at-block: (optional uint),
     rejected-at-block: (optional uint),
+    unresolved-at-block: (optional uint),
   }
 )
 
@@ -171,6 +172,7 @@
         disputed-at-block: none,
         settled-at-block: none,
         rejected-at-block: none,
+        unresolved-at-block: none,
         liveness: resolved-liveness,
         status: STATUS_OPEN,
       })
@@ -273,7 +275,10 @@
   )
 )
 
-(define-public (resolve (assertion-id (buff 32)) (resolve-status uint))
+(define-public (resolve
+    (assertion-id (buff 32))
+    (resolve-status uint)
+  )
   (let ((assertion (unwrap! (map-get? assertion-map assertion-id) ERR_ASSERTION_NOT_FOUND)))
     (asserts! (is-some (map-get? arbiter-map contract-caller)) ERR_NOT_ARBITER)
     (asserts! (is-eq (get status assertion) STATUS_DISPUTED) ERR_INVALID_STATUS)
@@ -307,11 +312,10 @@
             ERR_TRANSFER_FAILED
           )
           (print {
-            event: "resolved",
+            event: "settled",
             data: {
               assertion-id: assertion-id,
-              resolve-status: STATUS_SETTLED,
-              resolved-at-block: resolved-at-block,
+              settled-at-block: resolved-at-block,
             },
           })
           (ok true)
@@ -325,43 +329,47 @@
               })
             )
             (unwrap!
-              (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-                transfer (* u2 bond-sats) current-contract disputer none
+              (contract-call?
+                'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer
+                (* u2 bond-sats) current-contract disputer none
               )
               ERR_TRANSFER_FAILED
             )
             (print {
-              event: "resolved",
+              event: "rejected",
               data: {
                 assertion-id: assertion-id,
-                resolve-status: STATUS_REJECTED,
-                resolved-at-block: resolved-at-block,
+                rejected-at-block: resolved-at-block,
               },
             })
             (ok true)
           )
           (begin
             (map-set assertion-map assertion-id
-              (merge assertion { status: STATUS_UNRESOLVED })
+              (merge assertion {
+                status: STATUS_UNRESOLVED,
+                unresolved-at-block: (some resolved-at-block),
+              })
             )
             (unwrap!
-              (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-                transfer bond-sats current-contract asserter none
+              (contract-call?
+                'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer
+                bond-sats current-contract asserter none
               )
               ERR_TRANSFER_FAILED
             )
             (unwrap!
-              (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
-                transfer bond-sats current-contract disputer none
+              (contract-call?
+                'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer
+                bond-sats current-contract disputer none
               )
               ERR_TRANSFER_FAILED
             )
             (print {
-              event: "resolved",
+              event: "unresolved",
               data: {
                 assertion-id: assertion-id,
-                resolve-status: STATUS_UNRESOLVED,
-                resolved-at-block: resolved-at-block,
+                unresolved-at-block: resolved-at-block,
               },
             })
             (ok true)
