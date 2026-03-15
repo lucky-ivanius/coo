@@ -28,8 +28,8 @@ export default function Layout({ children }: PropsWithChildren) {
         <body className={cn([jetBrainsMono.variable, "antialiased"])}>
           <Header />
           {children}
+          <Toaster />
         </body>
-        <Toaster />
       </AppProviders>
     </html>
   );
