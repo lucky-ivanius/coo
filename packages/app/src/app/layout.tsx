@@ -29,8 +29,8 @@ export default function Layout({ children }: PropsWithChildren) {
           <Header />
           {children}
         </body>
+        <Toaster />
       </AppProviders>
-      <Toaster />
     </html>
   );
 }
