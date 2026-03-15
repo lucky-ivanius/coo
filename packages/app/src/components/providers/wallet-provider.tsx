@@ -1,14 +1,14 @@
 "use client";
 
 import type { WbipProvider } from "@stacks/connect";
+import type { StacksNetworkName } from "@stacks/network";
 import type { PropsWithChildren } from "react";
 import { DEFAULT_PROVIDERS, getLocalStorage, isConnected, connect as stacksConnect, disconnect as stacksDisconnect } from "@stacks/connect";
 import { createContext, useCallback, useEffect, useState } from "react";
-
-export type NetworkName = "mainnet" | "testnet";
+import { toast } from "sonner";
 
 export type WalletContextType = {
-  network: NetworkName;
+  network: StacksNetworkName;
   connected: boolean;
   stxAddress: string | null;
   providers: readonly WbipProvider[];
@@ -18,7 +18,7 @@ export type WalletContextType = {
 
 export const WalletContext = createContext<WalletContextType | null>(null);
 
-export function WalletProvider({ network = "testnet", children }: PropsWithChildren<{ network?: NetworkName }>) {
+export function WalletProvider({ network = "testnet", children }: PropsWithChildren<{ network?: StacksNetworkName }>) {
   const [connected, setConnected] = useState(false);
   const [stxAddress, setStxAddress] = useState<string | null>(null);
 
@@ -32,11 +32,18 @@ export function WalletProvider({ network = "testnet", children }: PropsWithChild
   }, []);
 
   const connect = useCallback(async () => {
-    await stacksConnect({ network, forceWalletSelect: true });
+    try {
+      await stacksConnect({ network, forceWalletSelect: true });
 
-    const data = getLocalStorage();
-    setConnected(true);
-    setStxAddress(data?.addresses.stx[0]?.address ?? null);
+      const data = getLocalStorage();
+      setConnected(true);
+      setStxAddress(data?.addresses.stx[0]?.address ?? null);
+    } catch (err) {
+      toast.error(<span className="text-destructive">Failed to connect wallet</span>, {
+        description: <span className="text-muted-foreground text-xs">{(err as Error)?.message ?? "Unknown error"}</span>,
+        position: "top-center",
+      });
+    }
   }, [network]);
 
   const disconnect = useCallback(() => {

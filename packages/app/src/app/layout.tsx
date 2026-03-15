@@ -7,6 +7,7 @@ import type { PropsWithChildren } from "react";
 
 import { Header } from "@/components/header";
 import { AppProviders } from "@/components/providers/app-providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -29,6 +30,7 @@ export default function Layout({ children }: PropsWithChildren) {
           {children}
         </body>
       </AppProviders>
+      <Toaster />
     </html>
   );
 }
