@@ -1,14 +1,13 @@
-import { Alert01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, InformationCircleIcon } from "@hugeicons/core-free-icons";
+import { Alert01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, HelpCircleIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import type { AssertionStatus } from "@/types/assertion";
-import { cn } from "@/lib/utils";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 import { Badge } from "../ui/badge";
 
 const STATUS_CONFIG = {
-  [ASSERTION_STATUS.ASSERTED]: {
+  [ASSERTION_STATUS.OPEN]: {
     label: "Open",
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     icon: InformationCircleIcon,
@@ -27,6 +26,11 @@ const STATUS_CONFIG = {
     label: "Rejected",
     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     icon: CancelCircleIcon,
+  },
+  [ASSERTION_STATUS.UNRESOLVED]: {
+    label: "Unresolved",
+    className: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
+    icon: HelpCircleIcon,
   },
 } as const;
 

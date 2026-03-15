@@ -11,7 +11,6 @@ import { Sheet } from "@/components/ui/sheet";
 import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
-import { bytesToText } from "@/lib/assertion";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 export interface AssertionCardProps {
@@ -37,8 +36,8 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
   const [detailOpen, setDetailOpen] = useState(false);
   const blocksLeft = useAssertionCountdown(assertion, currentBlock);
 
-  const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft === 0;
-  const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft !== null && blocksLeft > 0;
+  const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
+  const canDispute = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft !== null && blocksLeft > 0;
   const disputed = assertion.status === ASSERTION_STATUS.DISPUTED;
   const settled = assertion.status === ASSERTION_STATUS.SETTLED;
   const rejected = assertion.status === ASSERTION_STATUS.REJECTED;
@@ -51,7 +50,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
         </CardHeader>
 
         <CardContent>
-          <p className="line-clamp-2 min-h-10 text-foreground text-sm leading-relaxed lg:line-clamp-1 lg:min-h-fit">{bytesToText(assertion.claim)}</p>
+          <p className="line-clamp-2 min-h-10 text-foreground text-sm leading-relaxed lg:line-clamp-1 lg:min-h-fit">{assertion.claim}</p>
         </CardContent>
 
         <CardFooter className="gap-3 pt-3">
