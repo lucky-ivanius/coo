@@ -3,8 +3,6 @@ import type { Assertion } from "@/types/assertion";
 /** Stacks block time in milliseconds (~5 seconds per block). */
 export const BLOCK_TIME_MS = 5_000;
 
-const SATS_PER_BTC = 100_000_000;
-
 export function bytesToText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
 }
@@ -13,10 +11,6 @@ export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
-}
-
-export function satsToSbtc(sats: number): string {
-  return (sats / SATS_PER_BTC).toFixed(8).replace(/\.?0+$/, "");
 }
 
 export function truncateId(id: string): string {
