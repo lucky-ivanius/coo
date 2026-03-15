@@ -19,13 +19,13 @@ export function WalletProfileDialog({ size = "default" }: Props) {
       <DialogTrigger
         render={
           <Button size={size} variant="ghost">
-            {truncateAddress(stxAddress ?? "")}
+            {truncateAddress(stxAddress ?? "My Wallet")}
           </Button>
         }
       />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{truncateAddress(stxAddress ?? "")}</DialogTitle>
+          <DialogTitle>{truncateAddress(stxAddress ?? "My Wallet")}</DialogTitle>
           <DialogDescription className="text-xs">{network.replace(/^./, (char) => char.toUpperCase())}</DialogDescription>
         </DialogHeader>
 
