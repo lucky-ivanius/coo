@@ -1,6 +1,7 @@
 "use client";
 
 import type { Assertion } from "@/types/assertion";
+import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { AssertionCard } from "@/components/verify/assertion-card";
 import { useMockBlockHeight } from "@/hooks/use-mock-block-height";
 import { useWallet } from "@/hooks/use-wallet";
@@ -21,10 +22,10 @@ export function AssertionList({ assertions = MOCK_ASSERTIONS }: AssertionListPro
 
   if (assertions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-border border-dashed py-16 text-center">
-        <p className="font-medium text-foreground">No assertions found</p>
-        <p className="mt-1 text-muted-foreground text-sm">Assertions made on-chain will appear here.</p>
-      </div>
+      <Empty>
+        <EmptyTitle>No assertions found</EmptyTitle>
+        <EmptyDescription>Assertions made on-chain will appear here.</EmptyDescription>
+      </Empty>
     );
   }
 

@@ -12,15 +12,12 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useState } from "react";
 
-import type { ClaimView } from "@/components/verify/claim-toggle";
 import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ClaimToggle } from "@/components/verify/claim-toggle";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
-import { blocksToHuman, bytesToHex, bytesToText, satsToSbtc, truncateId } from "@/lib/assertion";
+import { blocksToHuman, satsToSbtc, truncateId } from "@/lib/assertion";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 // ── Meta row ─────────────────────────────────────────────────────────────────
@@ -54,7 +51,7 @@ export interface AssertionDetailProps {
   assertion: Assertion;
   /**
    * Blocks remaining from useAssertionCountdown.
-   * null = not ASSERTED; 0 = window expired.
+   * null = not OPEN; 0 = window expired.
    */
   blocksLeft: number | null;
   /**
@@ -68,12 +65,10 @@ export interface AssertionDetailProps {
 }
 
 export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
-  const [claimView, setClaimView] = useState<ClaimView>("text");
+  // const [claimView, setClaimView] = useState<ClaimView>("text");
 
-  const awaitingSettlement = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft === 0;
-  const canDispute = assertion.status === ASSERTION_STATUS.ASSERTED && blocksLeft !== null && blocksLeft > 0;
-
-  const identifierText = `0x${bytesToHex(assertion.identifier)}`;
+  const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
+  const canDispute = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft !== null && blocksLeft > 0;
 
   return (
     <SheetContent side="right" className="flex flex-col gap-0 p-0 lg:w-[40vw] lg:max-w-[40vw]!">
@@ -82,7 +77,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
         <div className="flex flex-wrap items-center gap-2 pr-8">
           {awaitingSettlement ? <AwaitingSettlementBadge /> : <StatusBadge status={assertion.status} />}
         </div>
-        <SheetTitle className="font-mono font-normal text-muted-foreground text-xs">#{truncateId(assertion.id)}</SheetTitle>
+        <SheetTitle className="font-mono font-normal text-muted-foreground text-xs">{truncateId(assertion.id)}</SheetTitle>
         <SheetDescription className="sr-only">Full details for assertion {assertion.id}</SheetDescription>
       </SheetHeader>
 
@@ -92,13 +87,15 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
         <div>
           <div className="mb-2.5 flex items-center justify-between">
             <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">Claim</span>
-            <ClaimToggle view={claimView} onChange={setClaimView} />
+            {/*<ClaimToggle view={claimView} onChange={setClaimView} />*/}
           </div>
-          {claimView === "text" ? (
-            <p className="text-foreground text-sm leading-relaxed">{bytesToText(assertion.claim)}</p>
+          <p className="text-foreground text-sm leading-relaxed">{assertion.claim}</p>
+          {/*{claimView === "text" ? (
           ) : (
-            <code className="block break-all rounded-md bg-muted px-3 py-2.5 font-mono text-muted-foreground text-xs">0x{bytesToHex(assertion.claim)}</code>
-          )}
+            <code className="block break-all rounded-md bg-muted px-3 py-2.5 font-mono text-muted-foreground text-xs">
+              0x{Buffer.from(new TextEncoder().encode(assertion.claim)).toString("hex")}
+            </code>
+          )}*/}
         </div>
 
         <div className="border-border/60 border-t" />
@@ -106,7 +103,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
         {/* Metadata */}
         <div className="flex flex-col gap-3">
           <MetaRow icon={InformationCircleIcon} label="Identifier">
-            <p className="text-sm">{identifierText}</p>
+            <p className="text-sm">{assertion.identifier}</p>
           </MetaRow>
 
           <MetaRow icon={BitcoinShieldIcon} label="Bond">
