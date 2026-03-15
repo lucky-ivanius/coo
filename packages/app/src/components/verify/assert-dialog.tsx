@@ -97,7 +97,7 @@ export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps
                   <FieldLabel htmlFor="assert-bond">Bond</FieldLabel>
 
                   <InputGroup>
-                    <InputGroupNumberInput {...field} min={1} step={1} placeholder="10000" aria-invalid={fieldState.invalid || undefined} />
+                    <InputGroupNumberInput {...field} min={10000} step={1} placeholder="10000" aria-invalid={fieldState.invalid || undefined} />
                     <InputGroupAddon align="inline-end">
                       <InputGroupText>sats</InputGroupText>
                     </InputGroupAddon>
@@ -129,9 +129,7 @@ export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps
                   </InputGroup>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 
-                  <FieldDescription>Expires in {blocksToHuman(field.value ?? 1440)}</FieldDescription>
-
-                  {/*<FieldDescription>Number of blocks the assertion can be disputed before settlement.</FieldDescription>*/}
+                  <FieldDescription>Number of blocks the assertion can be disputed before settlement.</FieldDescription>
                 </Field>
               )}
             />

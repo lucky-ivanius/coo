@@ -6,7 +6,8 @@ import "./globals.css";
 import type { PropsWithChildren } from "react";
 
 import { Header } from "@/components/header";
-import { Providers } from "@/components/providers";
+import { AppProviders } from "@/components/providers/app-providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -23,12 +24,13 @@ export const metadata: Metadata = {
 export default function Layout({ children }: PropsWithChildren) {
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
-      <Providers>
+      <AppProviders>
         <body className={cn([jetBrainsMono.variable, "antialiased"])}>
           <Header />
           {children}
+          <Toaster />
         </body>
-      </Providers>
+      </AppProviders>
     </html>
   );
 }
