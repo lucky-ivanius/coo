@@ -180,6 +180,7 @@
         event: "asserted",
         data: {
           assertion-id: assertion-id,
+          asserted-by: contract-caller,
           identifier: identifier,
           claim: claim,
           bond-sats: bond-sats,
@@ -223,6 +224,7 @@
         event: "settled",
         data: {
           assertion-id: assertion-id,
+          settled-by: contract-caller,
           settled-at-block: settled-at-block,
         },
       })
@@ -266,6 +268,7 @@
         event: "disputed",
         data: {
           assertion-id: assertion-id,
+          disputed-by: contract-caller,
           disputed-at-block: disputed-at-block,
         },
       })
@@ -315,6 +318,7 @@
             event: "settled",
             data: {
               assertion-id: assertion-id,
+              settled-by: contract-caller,
               settled-at-block: resolved-at-block,
             },
           })
@@ -339,6 +343,7 @@
               event: "rejected",
               data: {
                 assertion-id: assertion-id,
+                rejected-by: contract-caller,
                 rejected-at-block: resolved-at-block,
               },
             })
@@ -369,6 +374,7 @@
               event: "unresolved",
               data: {
                 assertion-id: assertion-id,
+                unresolved-by: contract-caller,
                 unresolved-at-block: resolved-at-block,
               },
             })
