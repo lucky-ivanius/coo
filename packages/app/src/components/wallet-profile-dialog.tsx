@@ -1,6 +1,8 @@
 "use client";
 
 import type { VariantProps } from "class-variance-authority";
+import { UserIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { useSbtcBalance, useStxBalance } from "@/hooks/use-balances";
 import { useWallet } from "@/hooks/use-wallet";
@@ -9,7 +11,7 @@ import { truncateAddress } from "@/lib/wallet";
 
 import type { buttonVariants } from "./ui/button";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger } from "./ui/dialog";
 
 type Props = {
   size?: VariantProps<typeof buttonVariants>["size"];
@@ -36,6 +38,7 @@ export function WalletProfileDialog({ size = "default" }: Props) {
       <DialogTrigger
         render={
           <Button size={size} variant="ghost">
+            <HugeiconsIcon icon={UserIcon} className="size-5 text-primary" />
             {truncateAddress(stxAddress ?? "My Wallet")}
           </Button>
         }
@@ -67,6 +70,13 @@ export function WalletProfileDialog({ size = "default" }: Props) {
         {/* Footer */}
         <div className="mx-5 h-px bg-border" />
         <DialogFooter className="px-5 py-4">
+          <DialogClose
+            render={
+              <Button variant="ghost" size="sm" className="w-full">
+                Close
+              </Button>
+            }
+          />
           <Button onClick={disconnect} variant="destructive" size="sm" className="w-full">
             Disconnect
           </Button>
