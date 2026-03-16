@@ -86,7 +86,7 @@ export const MOCK_ASSERTIONS: Assertion[] = [
     rejectedAtBlock: 97_200,
   },
   {
-    id: "0xe0a5c3d4f6b7e8f9a012345678901234567890abcdef1234567890abcdef9012",
+    id: "0xe0a5c3d4f6b7e8f9a012345678901234567890abcdef1234567890abcdef9022",
     identifier: "mock-claim",
     claim: "Test",
     claimHash: "7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
