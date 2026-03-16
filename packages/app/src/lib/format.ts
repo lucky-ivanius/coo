@@ -2,7 +2,7 @@ const USTX_PER_STX = 1_000_000;
 const SATS_PER_BTC = 100_000_000;
 
 export const formatSbtc = (balance: number) => {
-  return (balance / SATS_PER_BTC).toLocaleString();
+  return (balance / SATS_PER_BTC).toLocaleString(undefined, { maximumFractionDigits: 8 });
 };
 
 export const parseSbtc = (balance: string) => {
@@ -10,7 +10,7 @@ export const parseSbtc = (balance: string) => {
 };
 
 export const formatStx = (balance: number) => {
-  return (balance / USTX_PER_STX).toLocaleString();
+  return (balance / USTX_PER_STX).toLocaleString(undefined, { maximumFractionDigits: 6 });
 };
 
 export const parseStx = (balance: string) => {
