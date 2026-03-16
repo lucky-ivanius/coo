@@ -16,6 +16,6 @@ import { ASSERTION_STATUS } from "@/types/assertion";
 export function useAssertionCountdown(assertion: Assertion, currentBlock: number): number | null {
   if (assertion.status !== ASSERTION_STATUS.OPEN) return null;
 
-  const blocksRemaining = getExpiryBlock(assertion) - currentBlock + 1;
+  const blocksRemaining = getExpiryBlock(assertion) - currentBlock;
   return Math.max(0, blocksRemaining);
 }

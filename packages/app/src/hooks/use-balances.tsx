@@ -1,10 +1,10 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
-import { getStacksClient } from "../lib/stacks-client";
+import { useStacksClient } from "./use-stacks-client";
 
 export const useStxBalance = (address: string | null): UseQueryResult<number> => {
-  const client = getStacksClient();
+  const { client } = useStacksClient();
 
   return useQuery<number>({
     queryKey: ["stxBalance", address],
@@ -25,7 +25,7 @@ export const useStxBalance = (address: string | null): UseQueryResult<number> =>
 };
 
 export const useSbtcBalance = (address: string | null): UseQueryResult<number> => {
-  const client = getStacksClient();
+  const { client } = useStacksClient();
 
   return useQuery<number>({
     queryKey: ["sbtcBalance", address],

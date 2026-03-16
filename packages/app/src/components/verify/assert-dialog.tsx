@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -10,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateAssertion } from "@/hooks/use-assertion";
+import { getTransactionExplorerUrl } from "@/lib/explorer";
 import { formatSbtc } from "@/lib/format";
 
 import { InputGroup, InputGroupAddon, InputGroupNumberInput, InputGroupText } from "../ui/input-group";
@@ -21,7 +23,7 @@ const assertSchema = z.object({
       error: "Bond must be a valid number",
     })
     .min(10000, { error: "Bond must be at least 10,000 sats" }),
-  liveness: z.number({ error: "Liveness must be a valid block number" }).min(1, { error: "Liveness must be at least 1 block" }).optional(),
+  liveness: z.number({ error: "Liveness must be a valid block number" }).min(1, { error: "Liveness must be at least 1 block" }).nullable(),
 });
 
 export type AssertFormValues = z.infer<typeof assertSchema>;
@@ -37,7 +39,7 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
     defaultValues: {
       claim: "",
       bondSats: undefined,
-      liveness: undefined,
+      liveness: null,
     },
     reValidateMode: "onBlur",
   });
@@ -55,7 +57,14 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
       });
 
       toast.info("Transaction sent!", {
-        description: <span className="text-muted-foreground text-xs">ID: {result.txid}</span>,
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
         position: "top-center",
       });
 
@@ -137,13 +146,13 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
               name="liveness"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid || undefined}>
+                <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="assert-liveness">
                     Liveness <span className="font-normal text-muted-foreground">(optional)</span>
                   </FieldLabel>
 
                   <InputGroup>
-                    <InputGroupNumberInput {...field} min={1} step={1} placeholder="1440" aria-invalid={fieldState.invalid || undefined} />
+                    <InputGroupNumberInput {...field} min={1} step={1} placeholder="1440" aria-invalid={fieldState.invalid} />
                     <InputGroupAddon align="inline-end">
                       <InputGroupText>blocks</InputGroupText>
                     </InputGroupAddon>

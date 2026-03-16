@@ -17,6 +17,7 @@ import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
+import { useAverageBlockTime } from "@/hooks/use-block";
 import { blocksToHuman, truncateId } from "@/lib/assertion";
 import { formatSbtc } from "@/lib/format";
 import { ASSERTION_STATUS } from "@/types/assertion";
@@ -38,10 +39,12 @@ function MetaRow({ icon, label, children, iconClassName }: { icon: IconSvgElemen
 // ── Liveness meta ─────────────────────────────────────────────────────────────
 
 function LivenessMeta({ assertion }: { assertion: Assertion }) {
+  const { data: averageBlockTime } = useAverageBlockTime();
+
   return (
     <span className="text-sm">
       <span className="font-medium text-foreground">{assertion.liveness.toLocaleString()} blocks</span>
-      <span className="text-muted-foreground"> ({blocksToHuman(assertion.liveness)})</span>
+      <span className="text-muted-foreground"> ({blocksToHuman(assertion.liveness, averageBlockTime ?? 5)})</span>
     </span>
   );
 }
@@ -50,17 +53,15 @@ function LivenessMeta({ assertion }: { assertion: Assertion }) {
 
 export interface AssertionDetailProps {
   assertion: Assertion;
-  /**
-   * Blocks remaining from useAssertionCountdown.
-   * null = not OPEN; 0 = window expired.
-   */
+
+  currentBlock: number;
   blocksLeft: number | null;
 
   onDispute: () => void;
   onSettle: () => void;
 }
 
-export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
+export function AssertionDetail({ assertion, currentBlock, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
   // const [claimView, setClaimView] = useState<ClaimView>("text");
 
   const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
@@ -133,7 +134,10 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
 
           {canDispute && blocksLeft !== null && blocksLeft > 0 && (
             <MetaRow icon={HourglassIcon} label="Dispute window closes in">
-              <p className="font-medium font-mono text-foreground text-sm tabular-nums">{blocksLeft.toLocaleString()} blocks</p>
+              <p className="font-medium font-mono text-foreground text-sm tabular-nums">
+                {(currentBlock + blocksLeft).toLocaleString()}{" "}
+                <span className="font-normal text-muted-foreground">≈ {blocksLeft.toLocaleString()} blocks remaining</span>
+              </p>
             </MetaRow>
           )}
 

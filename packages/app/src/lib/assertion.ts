@@ -1,8 +1,5 @@
 import type { Assertion } from "@/types/assertion";
 
-/** Stacks block time in milliseconds (~5 seconds per block). */
-export const BLOCK_TIME_MS = 5_000;
-
 export function bytesToText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
 }
@@ -17,9 +14,8 @@ export function truncateId(id: string): string {
   return `${id.slice(0, 8)}...${id.slice(-8)}`;
 }
 
-/** Converts blocks to a human-readable duration at ~5s per Stacks block. */
-export function blocksToHuman(blocks: number): string {
-  const seconds = blocks * 5;
+export function blocksToHuman(blocks: number, averageBlockTime: number): string {
+  const seconds = blocks * averageBlockTime;
 
   if (seconds < 60) return `~${seconds}s`;
   if (seconds < 3_600) return `~${Math.round(seconds / 60)}m`;

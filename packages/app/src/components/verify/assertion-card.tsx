@@ -2,7 +2,9 @@
 
 import { Alert01Icon, CheckmarkCircle02Icon, HourglassIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
@@ -12,14 +14,11 @@ import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
 import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
+import { getTransactionExplorerUrl } from "@/lib/explorer";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 export interface AssertionCardProps {
   assertion: Assertion;
-  /**
-   * Current Stacks block height.
-   * TODO: Provide from Stacks API / wallet context in integration.
-   */
   currentBlock: number;
 }
 
@@ -40,9 +39,26 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
     try {
       const result = await disputeAssertion.mutateAsync();
 
-      window.alert(result.txid);
-    } catch (error) {
-      console.error(error);
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const error = e as Error;
+
+      if (error.message.trim() === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{error.message ?? "Unknown error"}</span>,
+          position: "top-center",
+        });
+      }
     }
   };
 
@@ -50,9 +66,26 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
     try {
       const result = await settleAssertion.mutateAsync();
 
-      window.alert(result.txid);
-    } catch (error) {
-      console.error(error);
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const error = e as Error;
+
+      if (error.message.trim() === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{error.message ?? "Unknown error"}</span>,
+          position: "top-center",
+        });
+      }
     }
   };
 
@@ -86,7 +119,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
               </Button>
               <div className="flex items-center gap-1.5 font-mono text-muted-foreground text-xs">
                 <HugeiconsIcon icon={HourglassIcon} className="size-3.5 shrink-0" strokeWidth={1.5} />
-                <span className="tabular-nums">{blocksLeft} blocks</span>
+                <span className="tabular-nums">{blocksLeft} blocks remaining</span>
               </div>
             </>
           )}
@@ -127,7 +160,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
       </Card>
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={handleDispute} onSettle={handleSettle} />
+        <AssertionDetail assertion={assertion} currentBlock={currentBlock} blocksLeft={blocksLeft} onDispute={handleDispute} onSettle={handleSettle} />
       </Sheet>
     </>
   );

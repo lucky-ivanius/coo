@@ -3,17 +3,13 @@
 import type { Assertion } from "@/types/assertion";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { AssertionCard } from "@/components/verify/assertion-card";
-import { useMockBlockHeight } from "@/hooks/use-mock-block-height";
-import { MOCK_ASSERTIONS } from "@/lib/mock-data";
 
 export interface AssertionListProps {
-  assertions?: Assertion[];
+  assertions: Assertion[];
+  currentBlock: number;
 }
 
-export function AssertionList({ assertions = MOCK_ASSERTIONS }: AssertionListProps) {
-  // TODO: Replace with real Stacks block watcher in integration.
-  const currentBlock = useMockBlockHeight();
-
+export function AssertionList({ assertions, currentBlock }: AssertionListProps) {
   if (assertions.length === 0) {
     return (
       <Empty>
