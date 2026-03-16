@@ -1,7 +1,7 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
-import { getStacksClient } from "./use-stacks-client";
+import { getStacksClient } from "../lib/stacks-client";
 
 export const useStxBalance = (address: string | null): UseQueryResult<number> => {
   const client = getStacksClient();
