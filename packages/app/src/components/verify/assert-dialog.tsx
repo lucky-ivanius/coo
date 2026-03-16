@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -53,12 +54,22 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
         liveness: values.liveness ? BigInt(values.liveness) : undefined,
       });
 
-      console.log(result);
+      toast.info("Transaction sent!", {
+        description: <span className="text-muted-foreground text-xs">ID: {result.txid}</span>,
+        position: "top-center",
+      });
 
       form.reset();
       onOpenChange(false);
     } catch (e) {
-      console.error(e);
+      const error = e as Error;
+
+      if (error.message.trim() === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{error.message ?? "Unknown error"}</span>,
+          position: "top-center",
+        });
+      }
     }
   }
 
