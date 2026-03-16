@@ -55,14 +55,9 @@ export interface AssertionDetailProps {
    * null = not OPEN; 0 = window expired.
    */
   blocksLeft: number | null;
-  /**
-   * TODO: Wire to contract `dispute()` call in integration.
-   */
-  onDispute?: (assertionId: string) => void;
-  /**
-   * TODO: Wire to contract `settle()` call in integration.
-   */
-  onSettle?: (assertionId: string) => void;
+
+  onDispute: () => void;
+  onSettle: () => void;
 }
 
 export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
@@ -164,13 +159,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
 
       {canDispute && (
         <SheetFooter className="border-border border-t">
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={() => {
-              onDispute?.(assertion.id);
-            }}
-          >
+          <Button variant="destructive" className="w-full" onClick={onDispute}>
             <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
             Dispute this assertion
           </Button>
@@ -179,12 +168,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
 
       {awaitingSettlement && (
         <SheetFooter className="border-border border-t">
-          <Button
-            className="w-full"
-            onClick={() => {
-              onSettle?.(assertion.id);
-            }}
-          >
+          <Button className="w-full" onClick={onSettle}>
             <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
             Settle this assertion
           </Button>

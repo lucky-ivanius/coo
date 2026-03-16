@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/co
 import { Sheet } from "@/components/ui/sheet";
 import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
+import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
@@ -20,19 +21,9 @@ export interface AssertionCardProps {
    * TODO: Provide from Stacks API / wallet context in integration.
    */
   currentBlock: number;
-  /**
-   * Called when the user clicks "Dispute".
-   * TODO: Wire to contract `dispute()` call in integration.
-   */
-  onDispute?: (assertionId: string) => void;
-  /**
-   * Called when the user clicks "Settle".
-   * TODO: Wire to contract `settle()` call in integration.
-   */
-  onSettle?: (assertionId: string) => void;
 }
 
-export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: AssertionCardProps) {
+export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const blocksLeft = useAssertionCountdown(assertion, currentBlock);
 
@@ -41,6 +32,29 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
   const disputed = assertion.status === ASSERTION_STATUS.DISPUTED;
   const settled = assertion.status === ASSERTION_STATUS.SETTLED;
   const rejected = assertion.status === ASSERTION_STATUS.REJECTED;
+
+  const settleAssertion = useSettleAssertion(assertion);
+  const disputeAssertion = useDisputeAssertion(assertion);
+
+  const handleDispute = async () => {
+    try {
+      const result = await disputeAssertion.mutateAsync();
+
+      window.alert(result.txid);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSettle = async () => {
+    try {
+      const result = await settleAssertion.mutateAsync();
+
+      window.alert(result.txid);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <>
@@ -63,7 +77,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
                 onClick={(e) => {
                   e.stopPropagation();
 
-                  onDispute?.(assertion.id);
+                  return handleDispute();
                 }}
                 // TODO: Disable while wallet is not connected or tx is pending.
               >
@@ -82,7 +96,8 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                onSettle?.(assertion.id);
+
+                return handleSettle();
               }}
               // TODO: Disable while wallet is not connected or tx is pending.
             >
@@ -112,7 +127,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
       </Card>
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={onDispute} onSettle={onSettle} />
+        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={handleDispute} onSettle={handleSettle} />
       </Sheet>
     </>
   );
