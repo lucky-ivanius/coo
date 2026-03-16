@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateAssertion } from "@/hooks/use-assertion";
+import { formatSbtc } from "@/lib/format";
 
 import { InputGroup, InputGroupAddon, InputGroupNumberInput, InputGroupText } from "../ui/input-group";
-
-const SATS_PER_SBTC = 100_000_000;
 
 const assertSchema = z.object({
   claim: z.string().min(1, "Claim is required"),
@@ -20,18 +20,17 @@ const assertSchema = z.object({
       error: "Bond must be a valid number",
     })
     .min(10000, { error: "Bond must be at least 10,000 sats" }),
-  liveness: z.number({ error: "Liveness must be a valid block number" }).min(1, { error: "Liveness must be at least 1 block" }),
+  liveness: z.number({ error: "Liveness must be a valid block number" }).min(1, { error: "Liveness must be at least 1 block" }).optional(),
 });
 
-type AssertFormValues = z.infer<typeof assertSchema>;
+export type AssertFormValues = z.infer<typeof assertSchema>;
 
 interface AssertDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (values: AssertFormValues) => void;
 }
 
-export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps) {
+export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
   const form = useForm<AssertFormValues>({
     resolver: zodResolver(assertSchema),
     defaultValues: {
@@ -41,12 +40,26 @@ export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps
     },
     reValidateMode: "onBlur",
   });
+  const createAssertion = useCreateAssertion();
 
-  function handleSubmit(values: AssertFormValues) {
-    onSubmit?.(values);
-    form.reset();
+  async function handleSubmit(values: AssertFormValues) {
+    try {
+      const enc = new TextEncoder();
 
-    onOpenChange(false);
+      const result = await createAssertion.mutateAsync({
+        identifier: enc.encode("statement"),
+        claim: enc.encode(values.claim),
+        bondSats: BigInt(values.bondSats),
+        liveness: values.liveness ? BigInt(values.liveness) : undefined,
+      });
+
+      console.log(result);
+
+      form.reset();
+      onOpenChange(false);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function handleOpenChange(next: boolean) {
@@ -103,9 +116,7 @@ export function AssertDialog({ open, onOpenChange, onSubmit }: AssertDialogProps
                   </InputGroup>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 
-                  <FieldDescription>
-                    ≈ {(Number(form.watch("bondSats") ?? 0) / SATS_PER_SBTC).toLocaleString(undefined, { maximumFractionDigits: 8 })} sBTC
-                  </FieldDescription>
+                  <FieldDescription>≈ {formatSbtc(form.watch("bondSats") ?? 0)} sBTC</FieldDescription>
                 </Field>
               )}
             />
