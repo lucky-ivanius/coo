@@ -5,11 +5,13 @@ import { useStacksClient } from "./use-stacks-client";
 export type OnBlockUpdateCallback = (currentBlock: number) => void;
 
 export const useSubscribeBlock = () => {
-  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const unsubscribeRef = useRef<(() => Promise<void>) | null>(null);
   const { wsClient } = useStacksClient();
 
   const subscribe = useCallback(
     async (onBlockUpdate: OnBlockUpdateCallback) => {
+      if (unsubscribeRef.current) await unsubscribeRef.current();
+
       const subscription = await wsClient.subscribeBlocks((currentBlock) => {
         onBlockUpdate(currentBlock.height);
       });
@@ -21,8 +23,9 @@ export const useSubscribeBlock = () => {
 
   const unsubscribe = useCallback(() => {
     if (unsubscribeRef.current) {
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
+      unsubscribeRef.current().then(() => {
+        unsubscribeRef.current = null;
+      });
     }
   }, []);
 
