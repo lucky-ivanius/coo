@@ -12,7 +12,7 @@ import { WalletProvider } from "./wallet-provider";
 
 const queryClient = new QueryClient();
 const stacksClient = getStacksClient();
-const stacksWsClient = await getStacksWsClient();
+const stacksWsClient = getStacksWsClient();
 
 export const AppProviders = ({ children }: PropsWithChildren) => {
   return (
