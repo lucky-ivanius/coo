@@ -75,7 +75,7 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
         description: (
           <span className="text-muted-foreground text-xs">
             Transaction ID:{" "}
-            <Link target="_blank" href={getTransactionExplorerUrl(result.txid)} className="underline">
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
               0x{result.txid}
             </Link>
           </span>
