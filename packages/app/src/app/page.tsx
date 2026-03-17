@@ -33,8 +33,8 @@ export default function VerifyPage() {
   useEffect(() => {
     if (!blockSubscriberConnected) return;
 
-    subscribeBlock((currentBlock) => {
-      setCurrentBlock(currentBlock);
+    subscribeBlock((nextBlock) => {
+      setCurrentBlock((prev) => Math.max(prev, nextBlock));
     });
 
     return () => {
