@@ -35,19 +35,15 @@ export const useSbtcBalance = (address: string | null): UseQueryResult<number> =
   return useQuery<number>({
     queryKey: ["sbtcBalance", address],
     queryFn: async () => {
-      const { data, error } = await client.GET("/extended/v2/addresses/{principal}/balances/ft", {
-        params: { path: { principal: address! } },
+      const { data, error } = await client.GET("/extended/v2/addresses/{principal}/balances/ft/{token}", {
+        params: { path: { principal: address!, token: `${getSbtcAddress(network)}::sbtc-token` } },
       });
 
       if (error) {
         throw new Error("Error fetching sBTC balance");
       }
 
-      const sbtcEntry = data.results?.find((ft) => ft.token === `${getSbtcAddress(network)}::sbtc-token`);
-
-      if (!sbtcEntry) return 0;
-
-      return Number(sbtcEntry.balance);
+      return Number(data.balance);
     },
     enabled: !!address,
     refetchInterval: 10000,
