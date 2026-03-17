@@ -14,7 +14,7 @@ export function ConnectWalletButton({ size = "default" }: Props) {
   const { connect, connecting } = useWallet();
 
   return (
-    <Button size={size} className="gap-2 font-medium" onClick={connect}>
+    <Button size={size} className="gap-2 font-medium" onClick={connect} disabled={connecting}>
       {connecting ? (
         <>
           <HugeiconsIcon icon={Loading02Icon} className="size-4 animate-spin" />
