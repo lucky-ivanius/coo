@@ -21,8 +21,8 @@ export default function VerifyPage() {
   const { data: _currentBlock } = useCurrentBlock();
 
   useEffect(() => {
-    if (_currentBlock) {
-      setCurrentBlock(_currentBlock);
+    if (_currentBlock !== undefined) {
+      setCurrentBlock((prev) => Math.max(prev, _currentBlock));
     }
   }, [_currentBlock]);
 
