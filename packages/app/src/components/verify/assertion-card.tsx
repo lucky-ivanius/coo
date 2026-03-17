@@ -107,6 +107,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
               <Button
                 variant="destructive"
                 size="sm"
+                disabled={disputeAssertion.isPending}
                 onClick={(e) => {
                   e.stopPropagation();
 
@@ -127,6 +128,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
           {awaitingSettlement && (
             <Button
               size="sm"
+              disabled={settleAssertion.isPending}
               onClick={(e) => {
                 e.stopPropagation();
 
@@ -160,7 +162,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
       </Card>
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} currentBlock={currentBlock} blocksLeft={blocksLeft} onDispute={handleDispute} onSettle={handleSettle} />
+        <AssertionDetail assertion={assertion} currentBlock={currentBlock} blocksLeft={blocksLeft} />
       </Sheet>
     </>
   );

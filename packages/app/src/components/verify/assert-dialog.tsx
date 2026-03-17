@@ -172,7 +172,9 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
           </FieldGroup>
 
           <DialogFooter className="mt-6">
-            <Button type="submit">Assert</Button>
+            <Button type="submit" disabled={createAssertion.isPending}>
+              Assert
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

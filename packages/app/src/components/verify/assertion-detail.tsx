@@ -12,13 +12,17 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
+import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
 import { useAverageBlockTime } from "@/hooks/use-block";
 import { blocksToHuman, truncateId } from "@/lib/assertion";
+import { getTransactionExplorerUrl } from "@/lib/explorer";
 import { formatSbtc } from "@/lib/format";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
@@ -56,16 +60,70 @@ export interface AssertionDetailProps {
 
   currentBlock: number;
   blocksLeft: number | null;
-
-  onDispute: () => void;
-  onSettle: () => void;
 }
 
-export function AssertionDetail({ assertion, currentBlock, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
+export function AssertionDetail({ assertion, currentBlock, blocksLeft }: AssertionDetailProps) {
   // const [claimView, setClaimView] = useState<ClaimView>("text");
 
   const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
   const canDispute = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft !== null && blocksLeft > 0;
+
+  const settleAssertion = useSettleAssertion(assertion);
+  const disputeAssertion = useDisputeAssertion(assertion);
+
+  const handleDispute = async () => {
+    try {
+      const result = await disputeAssertion.mutateAsync();
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
+
+  const handleSettle = async () => {
+    try {
+      const result = await settleAssertion.mutateAsync();
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
 
   return (
     <SheetContent side="right" className="flex flex-col gap-0 p-0 lg:w-[40vw] lg:max-w-[40vw]!">
@@ -163,7 +221,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft, onDispute
 
       {canDispute && (
         <SheetFooter className="border-border border-t">
-          <Button variant="destructive" className="w-full" onClick={onDispute}>
+          <Button variant="destructive" className="w-full" onClick={handleDispute}>
             <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
             Dispute this assertion
           </Button>
@@ -172,7 +230,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft, onDispute
 
       {awaitingSettlement && (
         <SheetFooter className="border-border border-t">
-          <Button className="w-full" onClick={onSettle}>
+          <Button className="w-full" onClick={handleSettle}>
             <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
             Settle this assertion
           </Button>
