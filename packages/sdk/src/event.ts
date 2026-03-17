@@ -132,6 +132,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
 
         res.data?.events.forEach((e) => {
           if (e.event_type !== "smart_contract_log") return;
+          if (e.contract_log.contract_id !== address) return;
 
           const event = Cl.deserialize<CooContractEventCV>(e.contract_log.value.hex);
 
