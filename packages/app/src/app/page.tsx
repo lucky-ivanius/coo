@@ -46,10 +46,12 @@ export default function VerifyPage() {
     if (!assertionEventSubscriberConnected) return;
 
     subscribeAssertionEvent(({ txId, event, data }) => {
+      const assertionId = bytesToHex(data.assertionId);
+
       switch (event) {
         case "asserted": {
           const assertion: Assertion = {
-            id: bytesToHex(data.assertionId),
+            id: assertionId,
             identifier: bytesToText(data.identifier),
             asserter: data.assertedBy,
             claim: bytesToText(data.claim),
@@ -60,7 +62,7 @@ export default function VerifyPage() {
             assertedAtBlock: Number(data.assertedAtBlock),
           };
 
-          setAssertions((prev) => [assertion, ...prev]);
+          setAssertions((prev) => (prev.some((a) => a.id === assertionId) ? prev : [assertion, ...prev]));
 
           break;
         }
@@ -68,7 +70,7 @@ export default function VerifyPage() {
         case "settled": {
           setAssertions((prev) =>
             prev.map((a) =>
-              a.id === bytesToHex(data.assertionId)
+              a.id === assertionId
                 ? {
                     ...a,
                     status: ASSERTION_STATUS.SETTLED,
@@ -87,7 +89,7 @@ export default function VerifyPage() {
         case "disputed": {
           setAssertions((prev) =>
             prev.map((a) =>
-              a.id === bytesToHex(data.assertionId)
+              a.id === assertionId
                 ? { ...a, status: ASSERTION_STATUS.DISPUTED, disputedTxId: txId, disputedAtBlock: Number(data.disputedAtBlock), disputer: data.disputedBy }
                 : a
             )
@@ -99,7 +101,7 @@ export default function VerifyPage() {
         case "rejected": {
           setAssertions((prev) =>
             prev.map((a) =>
-              a.id === bytesToHex(data.assertionId)
+              a.id === assertionId
                 ? {
                     ...a,
                     status: ASSERTION_STATUS.REJECTED,
@@ -118,7 +120,7 @@ export default function VerifyPage() {
         case "unresolved": {
           setAssertions((prev) =>
             prev.map((a) =>
-              a.id === bytesToHex(data.assertionId)
+              a.id === assertionId
                 ? {
                     ...a,
                     status: ASSERTION_STATUS.UNRESOLVED,
