@@ -10,8 +10,10 @@ import { formatSbtc, formatStx } from "@/lib/format";
 import { truncateAddress } from "@/lib/wallet";
 
 import type { buttonVariants } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Separator } from "./ui/separator";
 
 type Props = {
   size?: VariantProps<typeof buttonVariants>["size"];
@@ -43,9 +45,17 @@ export function WalletProfileDialog({ size = "default" }: Props) {
           </Button>
         }
       />
-      <DialogContent showCloseButton={false} className="gap-0 overflow-hidden p-0">
+      <DialogContent showCloseButton={false} className="min-w-[30vw]">
         {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-5 pb-4">
+        <DialogHeader className="w-full flex-row items-start justify-between">
+          <div className="flex flex-col gap-1">
+            <DialogTitle className="font-semibold text-muted-foreground text-xs uppercase tracking-widest">Wallet</DialogTitle>
+            <DialogDescription className="font-medium font-mono text-foreground text-sm">{stxAddress ?? "—"}</DialogDescription>
+          </div>
+          <Badge variant="secondary">{networkLabel}</Badge>
+        </DialogHeader>
+
+        {/*<div className="flex items-start justify-between px-5 pt-5 pb-4">
           <div className="flex flex-col gap-1">
             <p className="font-semibold text-[10px] text-muted-foreground uppercase tracking-widest">Wallet</p>
             <p className="font-medium font-mono text-sm">{stxAddress ?? "—"}</p>
@@ -53,14 +63,14 @@ export function WalletProfileDialog({ size = "default" }: Props) {
           <span className="mt-0.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-semibold text-[10px] text-primary tracking-wide">
             {networkLabel}
           </span>
-        </div>
+        </div>*/}
 
         {/* Divider */}
-        <div className="mx-5 h-px bg-border" />
+        {/*<div className="mx-5 h-px bg-border" />*/}
 
         {/* Balances */}
-        <div className="flex flex-col gap-3 px-5 py-4">
-          <p className="font-semibold text-[10px] text-muted-foreground uppercase tracking-widest">Balances</p>
+        <div className="flex flex-col gap-3">
+          <p className="font-semibold text-muted-foreground text-xs uppercase tracking-widest">Balances</p>
           <div className="flex gap-2">
             <BalanceCard label="STX" value={stxBalance !== undefined ? formatStx(stxBalance) : undefined} />
             <BalanceCard label="sBTC" value={sbtcBalance !== undefined ? formatSbtc(sbtcBalance) : undefined} />
@@ -68,16 +78,9 @@ export function WalletProfileDialog({ size = "default" }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="mx-5 h-px bg-border" />
-        <DialogFooter className="px-5 py-4">
-          <DialogClose
-            render={
-              <Button variant="ghost" size="sm" className="w-full">
-                Close
-              </Button>
-            }
-          />
-          <Button onClick={disconnect} variant="destructive" size="sm" className="w-full">
+        <Separator orientation="horizontal" />
+        <DialogFooter showCloseButton={true} className="flex-col sm:flex-col">
+          <Button onClick={disconnect} variant="destructive" className="w-full">
             Disconnect
           </Button>
         </DialogFooter>
