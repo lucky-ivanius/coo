@@ -39,11 +39,19 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
     try {
       const result = await disputeAssertion.mutateAsync();
 
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
+
       toast.info("Transaction sent!", {
         description: (
           <span className="text-muted-foreground text-xs">
             Transaction ID:{" "}
-            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid)} className="underline">
               0x{result.txid}
             </Link>
           </span>
@@ -65,6 +73,14 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
   const handleSettle = async () => {
     try {
       const result = await settleAssertion.mutateAsync();
+
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
 
       toast.info("Transaction sent!", {
         description: (

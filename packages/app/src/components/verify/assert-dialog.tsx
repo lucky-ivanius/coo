@@ -60,11 +60,22 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
         liveness: values.liveness ? BigInt(values.liveness) : undefined,
       });
 
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        form.reset();
+        onOpenChange(false);
+
+        return;
+      }
+
       toast.info("Transaction sent!", {
         description: (
           <span className="text-muted-foreground text-xs">
             Transaction ID:{" "}
-            <Link target="_blank" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+            <Link target="_blank" href={getTransactionExplorerUrl(result.txid)} className="underline">
               0x{result.txid}
             </Link>
           </span>
