@@ -237,7 +237,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft }: Asserti
 
       {canDispute && (
         <SheetFooter className="border-border border-t">
-          <Button variant="destructive" className="w-full" onClick={handleDispute}>
+          <Button variant="destructive" className="w-full" onClick={handleDispute} disabled={disputeAssertion.isPending}>
             <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
             Dispute this assertion
           </Button>
@@ -246,7 +246,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft }: Asserti
 
       {awaitingSettlement && (
         <SheetFooter className="border-border border-t">
-          <Button className="w-full" onClick={handleSettle}>
+          <Button className="w-full" onClick={handleSettle} disabled={settleAssertion.isPending}>
             <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
             Settle this assertion
           </Button>
