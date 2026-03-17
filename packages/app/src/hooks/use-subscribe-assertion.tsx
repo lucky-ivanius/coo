@@ -30,6 +30,7 @@ export const useSubscribeAssertionEvent = () => {
   }, []);
 
   return {
+    connected: (wsClient.webSocket as WebSocket).readyState === WebSocket.OPEN,
     subscribe,
     unsubscribe,
   };

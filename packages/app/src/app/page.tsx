@@ -15,8 +15,12 @@ export default function VerifyPage() {
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [assertions, setAssertions] = useState<Assertion[]>([]);
 
-  const { subscribe: subscribeBlock, unsubscribe: unsubscribeBlock } = useSubscribeBlock();
-  const { subscribe: subscribeAssertionEvent, unsubscribe: unsubscribeAssertionEvent } = useSubscribeAssertionEvent();
+  const { subscribe: subscribeBlock, unsubscribe: unsubscribeBlock, connected: blockSubscriberConnected } = useSubscribeBlock();
+  const {
+    subscribe: subscribeAssertionEvent,
+    unsubscribe: unsubscribeAssertionEvent,
+    connected: assertionEventSubscriberConnected,
+  } = useSubscribeAssertionEvent();
 
   const { data: _currentBlock } = useCurrentBlock();
 
@@ -27,6 +31,8 @@ export default function VerifyPage() {
   }, [_currentBlock]);
 
   useEffect(() => {
+    if (!blockSubscriberConnected) return;
+
     subscribeBlock((currentBlock) => {
       setCurrentBlock(currentBlock);
     });
@@ -34,9 +40,11 @@ export default function VerifyPage() {
     return () => {
       unsubscribeBlock();
     };
-  }, [subscribeBlock, unsubscribeBlock]);
+  }, [blockSubscriberConnected, subscribeBlock, unsubscribeBlock]);
 
   useEffect(() => {
+    if (!assertionEventSubscriberConnected) return;
+
     subscribeAssertionEvent(({ txId, event, data }) => {
       switch (event) {
         case "asserted": {
@@ -133,7 +141,7 @@ export default function VerifyPage() {
     return () => {
       unsubscribeAssertionEvent();
     };
-  }, [subscribeAssertionEvent, unsubscribeAssertionEvent]);
+  }, [assertionEventSubscriberConnected, subscribeAssertionEvent, unsubscribeAssertionEvent]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
