@@ -4,6 +4,10 @@ export function bytesToText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
 }
 
+export function textToBytes(text: string): Uint8Array {
+  return new TextEncoder().encode(text);
+}
+
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))

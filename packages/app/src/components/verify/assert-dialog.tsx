@@ -11,13 +11,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateAssertion } from "@/hooks/use-assertion";
+import { textToBytes } from "@/lib/assertion";
 import { getTransactionExplorerUrl } from "@/lib/explorer";
 import { formatSbtc } from "@/lib/format";
 
 import { InputGroup, InputGroupAddon, InputGroupNumberInput, InputGroupText } from "../ui/input-group";
 
 const assertSchema = z.object({
-  claim: z.string().min(1, "Claim is required"),
+  claim: z
+    .string()
+    .min(1, "Claim is required")
+    .refine((v) => textToBytes(v).length <= 2048, { error: "Claim must be less than 2048 characters buffer" }),
   bondSats: z
     .number({
       error: "Bond must be a valid number",
@@ -109,10 +113,12 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
 
                   <Textarea
                     {...field}
+                    minLength={1}
+                    maxLength={2048}
                     placeholder="Enter a falsifiable statement, e.g. 'BTC price was above $100k on block 900000.'"
                     rows={3}
                     aria-invalid={fieldState.invalid || undefined}
-                    className="min-h-24"
+                    className="max-h-48 min-h-24"
                   />
 
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
