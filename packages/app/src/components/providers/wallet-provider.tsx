@@ -10,6 +10,7 @@ import { toast } from "sonner";
 export type WalletContextType = {
   network: StacksNetworkName;
   connected: boolean;
+  connecting: boolean;
   stxAddress: string | null;
   providers: readonly WbipProvider[];
   connect: () => Promise<void>;
@@ -20,6 +21,7 @@ export const WalletContext = createContext<WalletContextType | null>(null);
 
 export function WalletProvider({ network = "testnet", children }: PropsWithChildren<{ network?: StacksNetworkName }>) {
   const [connected, setConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [stxAddress, setStxAddress] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,16 +35,24 @@ export function WalletProvider({ network = "testnet", children }: PropsWithChild
 
   const connect = useCallback(async () => {
     try {
+      setConnecting(true);
+
       await stacksConnect({ network, forceWalletSelect: true });
 
       const data = getLocalStorage();
       setConnected(true);
       setStxAddress(data?.addresses.stx[0]?.address ?? null);
-    } catch (err) {
-      toast.error(<span className="text-destructive">Failed to connect wallet</span>, {
-        description: <span className="text-muted-foreground text-xs">{(err as Error)?.message ?? "Unknown error"}</span>,
-        position: "top-center",
-      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to connect wallet</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    } finally {
+      setConnecting(false);
     }
   }, [network]);
 
@@ -57,6 +67,7 @@ export function WalletProvider({ network = "testnet", children }: PropsWithChild
     <WalletContext.Provider
       value={{
         network,
+        connecting,
         connected,
         stxAddress,
         providers: DEFAULT_PROVIDERS,

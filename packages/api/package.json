@@ -1,0 +1,14 @@
+{
+  "name": "@coo/api",
+  "module": "src/index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@coo/sdk": "workspace:*",
+    "@stacks/blockchain-api-client": "8.14.2",
+    "@stacks/transactions": "7.3.1"
+  }
+}

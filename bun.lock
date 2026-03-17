@@ -29,17 +29,31 @@
         "@biomejs/biome": "catalog:",
       },
     },
+    "packages/api": {
+      "name": "@coo/api",
+      "dependencies": {
+        "@coo/sdk": "workspace:*",
+        "@stacks/blockchain-api-client": "8.14.2",
+        "@stacks/transactions": "7.3.1",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/app": {
       "name": "@coo/app",
       "version": "0.1.0",
       "dependencies": {
         "@base-ui/react": "1.2.0",
+        "@coo/sdk": "workspace:*",
         "@hookform/resolvers": "5.2.2",
         "@hugeicons/core-free-icons": "4.0.0",
         "@hugeicons/react": "1.1.6",
         "@stacks/blockchain-api-client": "8.14.2",
         "@stacks/connect": "8.2.6",
         "@stacks/network": "7.3.1",
+        "@stacks/transactions": "7.3.1",
         "@tanstack/react-query": "5.90.21",
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
@@ -61,6 +75,17 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "tailwindcss": "^4",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/sdk": {
+      "name": "@coo/sdk",
+      "dependencies": {
+        "@stacks/blockchain-api-client": "8.14.2",
+        "@stacks/transactions": "7.3.1",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -179,9 +204,13 @@
 
     "@bitcoinerlab/secp256k1": ["@bitcoinerlab/secp256k1@1.2.0", "", { "dependencies": { "@noble/curves": "^1.7.0" } }, "sha512-jeujZSzb3JOZfmJYI0ph1PVpCRV5oaexCgy+RvCXV8XlY+XFB/2n3WOcvBsKLsOw78KYgnQrQWb2HrKE4be88Q=="],
 
+    "@coo/api": ["@coo/api@workspace:packages/api"],
+
     "@coo/app": ["@coo/app@workspace:packages/app"],
 
     "@coo/coo-contracts": ["@coo/coo-contracts@workspace:contracts/coo"],
+
+    "@coo/sdk": ["@coo/sdk@workspace:packages/sdk"],
 
     "@coo/utils": ["@coo/utils@workspace:packages/utils"],
 

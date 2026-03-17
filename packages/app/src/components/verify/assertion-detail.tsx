@@ -12,12 +12,18 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
-import { blocksToHuman, satsToSbtc, truncateId } from "@/lib/assertion";
+import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
+import { useAverageBlockTime } from "@/hooks/use-block";
+import { blocksToHuman, truncateId } from "@/lib/assertion";
+import { getTransactionExplorerUrl } from "@/lib/explorer";
+import { formatSbtc } from "@/lib/format";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 // ── Meta row ─────────────────────────────────────────────────────────────────
@@ -37,10 +43,12 @@ function MetaRow({ icon, label, children, iconClassName }: { icon: IconSvgElemen
 // ── Liveness meta ─────────────────────────────────────────────────────────────
 
 function LivenessMeta({ assertion }: { assertion: Assertion }) {
+  const { data: averageBlockTime } = useAverageBlockTime();
+
   return (
     <span className="text-sm">
       <span className="font-medium text-foreground">{assertion.liveness.toLocaleString()} blocks</span>
-      <span className="text-muted-foreground"> ({blocksToHuman(assertion.liveness)})</span>
+      <span className="text-muted-foreground"> ({blocksToHuman(assertion.liveness, averageBlockTime ?? 5)})</span>
     </span>
   );
 }
@@ -49,26 +57,89 @@ function LivenessMeta({ assertion }: { assertion: Assertion }) {
 
 export interface AssertionDetailProps {
   assertion: Assertion;
-  /**
-   * Blocks remaining from useAssertionCountdown.
-   * null = not OPEN; 0 = window expired.
-   */
+
+  currentBlock: number;
   blocksLeft: number | null;
-  /**
-   * TODO: Wire to contract `dispute()` call in integration.
-   */
-  onDispute?: (assertionId: string) => void;
-  /**
-   * TODO: Wire to contract `settle()` call in integration.
-   */
-  onSettle?: (assertionId: string) => void;
 }
 
-export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: AssertionDetailProps) {
+export function AssertionDetail({ assertion, currentBlock, blocksLeft }: AssertionDetailProps) {
   // const [claimView, setClaimView] = useState<ClaimView>("text");
 
   const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
   const canDispute = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft !== null && blocksLeft > 0;
+
+  const settleAssertion = useSettleAssertion(assertion);
+  const disputeAssertion = useDisputeAssertion(assertion);
+
+  const handleDispute = async () => {
+    try {
+      const result = await disputeAssertion.mutateAsync();
+
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
+
+  const handleSettle = async () => {
+    try {
+      const result = await settleAssertion.mutateAsync();
+
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
 
   return (
     <SheetContent side="right" className="flex flex-col gap-0 p-0 lg:w-[40vw] lg:max-w-[40vw]!">
@@ -109,7 +180,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
           <MetaRow icon={BitcoinShieldIcon} label="Bond">
             <p className="text-sm">
               <span className="font-medium">{assertion.bondSats.toLocaleString()} sats</span>
-              <span className="text-muted-foreground"> · {satsToSbtc(assertion.bondSats)} sBTC</span>
+              <span className="text-muted-foreground"> · {formatSbtc(assertion.bondSats)} sBTC</span>
             </p>
           </MetaRow>
 
@@ -137,7 +208,10 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
 
           {canDispute && blocksLeft !== null && blocksLeft > 0 && (
             <MetaRow icon={HourglassIcon} label="Dispute window closes in">
-              <p className="font-medium font-mono text-foreground text-sm tabular-nums">{blocksLeft.toLocaleString()} blocks</p>
+              <p className="font-medium font-mono text-foreground text-sm tabular-nums">
+                {(currentBlock + blocksLeft).toLocaleString()}{" "}
+                <span className="font-normal text-muted-foreground">≈ {blocksLeft.toLocaleString()} blocks remaining</span>
+              </p>
             </MetaRow>
           )}
 
@@ -163,13 +237,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
 
       {canDispute && (
         <SheetFooter className="border-border border-t">
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={() => {
-              onDispute?.(assertion.id);
-            }}
-          >
+          <Button variant="destructive" className="w-full" onClick={handleDispute} disabled={disputeAssertion.isPending}>
             <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
             Dispute this assertion
           </Button>
@@ -178,12 +246,7 @@ export function AssertionDetail({ assertion, blocksLeft, onDispute, onSettle }: 
 
       {awaitingSettlement && (
         <SheetFooter className="border-border border-t">
-          <Button
-            className="w-full"
-            onClick={() => {
-              onSettle?.(assertion.id);
-            }}
-          >
+          <Button className="w-full" onClick={handleSettle} disabled={settleAssertion.isPending}>
             <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
             Settle this assertion
           </Button>

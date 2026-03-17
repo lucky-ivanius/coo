@@ -2,7 +2,9 @@
 
 import { Alert01Icon, CheckmarkCircle02Icon, HourglassIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import type { Assertion } from "@/types/assertion";
 import { Button } from "@/components/ui/button";
@@ -10,29 +12,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/co
 import { Sheet } from "@/components/ui/sheet";
 import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
+import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
+import { getTransactionExplorerUrl } from "@/lib/explorer";
 import { ASSERTION_STATUS } from "@/types/assertion";
 
 export interface AssertionCardProps {
   assertion: Assertion;
-  /**
-   * Current Stacks block height.
-   * TODO: Provide from Stacks API / wallet context in integration.
-   */
   currentBlock: number;
-  /**
-   * Called when the user clicks "Dispute".
-   * TODO: Wire to contract `dispute()` call in integration.
-   */
-  onDispute?: (assertionId: string) => void;
-  /**
-   * Called when the user clicks "Settle".
-   * TODO: Wire to contract `settle()` call in integration.
-   */
-  onSettle?: (assertionId: string) => void;
 }
 
-export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: AssertionCardProps) {
+export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const blocksLeft = useAssertionCountdown(assertion, currentBlock);
 
@@ -41,6 +31,79 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
   const disputed = assertion.status === ASSERTION_STATUS.DISPUTED;
   const settled = assertion.status === ASSERTION_STATUS.SETTLED;
   const rejected = assertion.status === ASSERTION_STATUS.REJECTED;
+
+  const settleAssertion = useSettleAssertion(assertion);
+  const disputeAssertion = useDisputeAssertion(assertion);
+
+  const handleDispute = async () => {
+    try {
+      const result = await disputeAssertion.mutateAsync();
+
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
+
+  const handleSettle = async () => {
+    try {
+      const result = await settleAssertion.mutateAsync();
+
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+              0x{result.txid}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
 
   return (
     <>
@@ -60,10 +123,11 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
               <Button
                 variant="destructive"
                 size="sm"
+                disabled={disputeAssertion.isPending}
                 onClick={(e) => {
                   e.stopPropagation();
 
-                  onDispute?.(assertion.id);
+                  return handleDispute();
                 }}
                 // TODO: Disable while wallet is not connected or tx is pending.
               >
@@ -72,7 +136,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
               </Button>
               <div className="flex items-center gap-1.5 font-mono text-muted-foreground text-xs">
                 <HugeiconsIcon icon={HourglassIcon} className="size-3.5 shrink-0" strokeWidth={1.5} />
-                <span className="tabular-nums">{blocksLeft} blocks</span>
+                <span className="tabular-nums">{blocksLeft} blocks remaining</span>
               </div>
             </>
           )}
@@ -80,9 +144,11 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
           {awaitingSettlement && (
             <Button
               size="sm"
+              disabled={settleAssertion.isPending}
               onClick={(e) => {
                 e.stopPropagation();
-                onSettle?.(assertion.id);
+
+                return handleSettle();
               }}
               // TODO: Disable while wallet is not connected or tx is pending.
             >
@@ -112,7 +178,7 @@ export function AssertionCard({ assertion, currentBlock, onDispute, onSettle }: 
       </Card>
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} blocksLeft={blocksLeft} onDispute={onDispute} onSettle={onSettle} />
+        <AssertionDetail assertion={assertion} currentBlock={currentBlock} blocksLeft={blocksLeft} />
       </Sheet>
     </>
   );

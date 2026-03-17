@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
 import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
-import { truncateAddress } from "@/lib/wallet";
 
 import { ConnectWalletButton } from "./connect-wallet-button";
 import { WalletProfileDialog } from "./wallet-profile-dialog";

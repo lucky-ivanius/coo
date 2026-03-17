@@ -24,13 +24,13 @@ export const metadata: Metadata = {
 export default function Layout({ children }: PropsWithChildren) {
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
-      <AppProviders>
-        <body className={cn([jetBrainsMono.variable, "antialiased"])}>
+      <body className={cn([jetBrainsMono.variable, "antialiased"])}>
+        <AppProviders>
           <Header />
           {children}
           <Toaster />
-        </body>
-      </AppProviders>
+        </AppProviders>
+      </body>
     </html>
   );
 }
