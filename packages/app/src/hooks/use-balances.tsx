@@ -1,7 +1,11 @@
 import type { UseQueryResult } from "@tanstack/react-query";
+import { StacksNetworkName } from "@stacks/network";
 import { useQuery } from "@tanstack/react-query";
 
+import { getSbtcAddress } from "@/lib/sbtc";
+
 import { useStacksClient } from "./use-stacks-client";
+import { useWallet } from "./use-wallet";
 
 export const useStxBalance = (address: string | null): UseQueryResult<number> => {
   const { client } = useStacksClient();
@@ -25,6 +29,7 @@ export const useStxBalance = (address: string | null): UseQueryResult<number> =>
 };
 
 export const useSbtcBalance = (address: string | null): UseQueryResult<number> => {
+  const { network } = useWallet();
   const { client } = useStacksClient();
 
   return useQuery<number>({
@@ -38,7 +43,7 @@ export const useSbtcBalance = (address: string | null): UseQueryResult<number> =
         throw new Error("Error fetching sBTC balance");
       }
 
-      const sbtcEntry = data.results?.find((ft) => ft.token.includes("sbtc-token"));
+      const sbtcEntry = data.results?.find((ft) => ft.token === `${getSbtcAddress(network)}::sbtc-token`);
 
       if (!sbtcEntry) return 0;
 
