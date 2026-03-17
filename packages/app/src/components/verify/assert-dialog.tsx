@@ -71,11 +71,11 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
       form.reset();
       onOpenChange(false);
     } catch (e) {
-      const error = e as Error;
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
 
-      if (error.message.trim() === "User rejected request") {
+      if (message === "User rejected request") {
         toast.error(<span className="text-destructive">Failed to send transaction</span>, {
-          description: <span className="text-muted-foreground text-xs">{error.message ?? "Unknown error"}</span>,
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
           position: "top-center",
         });
       }
