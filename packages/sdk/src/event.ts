@@ -117,6 +117,10 @@ export type CooUnresolvedEvent = CooEvent<
 
 export type CooContractEvent = CooAssertedEvent | CooDisputedEvent | CooSettledEvent | CooRejectedEvent | CooUnresolvedEvent;
 
+export const hexToBytes = (hex: string): Uint8Array => {
+  return Uint8Array.from(Buffer.from(hex, "hex"));
+};
+
 export const createCooEventSubscriber = (client: ReturnType<typeof createClient>, wsClient: StacksApiWebSocketClient) => {
   return {
     subscribe: async (address: string, onEvent: (event: CooContractEvent) => void) => {
@@ -144,12 +148,12 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooAssertedEventCV;
 
-              const assertionId = Uint8Array.fromHex(value["assertion-id"].value);
+              const assertionId = hexToBytes(value["assertion-id"].value);
               const assertedBy = value["asserted-by"].value;
-              const claim = Uint8Array.fromHex(value.claim.value);
+              const claim = hexToBytes(value.claim.value);
               const assertedAtBlock = BigInt(value["asserted-at-block"].value);
               const bondSats = BigInt(value["bond-sats"].value);
-              const identifier = Uint8Array.fromHex(value.identifier.value);
+              const identifier = hexToBytes(value.identifier.value);
               const liveness = BigInt(value.liveness.value);
 
               onEvent({
@@ -175,7 +179,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooSettledEventCV;
 
-              const assertionId = Uint8Array.fromHex(value["assertion-id"].value);
+              const assertionId = hexToBytes(value["assertion-id"].value);
               const settledBy = value["settled-by"].value;
               const settledAtBlock = BigInt(value["settled-at-block"].value);
 
@@ -197,7 +201,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooDisputedEventCV;
 
-              const assertionId = Uint8Array.fromHex(value["assertion-id"].value);
+              const assertionId = hexToBytes(value["assertion-id"].value);
               const disputedBy = value["disputed-by"].value;
               const disputedAtBlock = BigInt(value["disputed-at-block"].value);
 
@@ -219,7 +223,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooRejectedEventCV;
 
-              const assertionId = Uint8Array.fromHex(value["assertion-id"].value);
+              const assertionId = hexToBytes(value["assertion-id"].value);
               const rejectedBy = value["rejected-by"].value;
               const rejectedAtBlock = BigInt(value["rejected-at-block"].value);
 
@@ -241,7 +245,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooUnresolvedEventCV;
 
-              const assertionId = Uint8Array.fromHex(value["assertion-id"].value);
+              const assertionId = hexToBytes(value["assertion-id"].value);
               const unresolvedBy = value["unresolved-by"].value;
               const unresolvedAtBlock = BigInt(value["unresolved-at-block"].value);
 
