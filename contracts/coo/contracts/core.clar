@@ -297,7 +297,7 @@
     (resolve-status uint)
   )
   (let ((assertion (unwrap! (map-get? assertion-map assertion-id) ERR_ASSERTION_NOT_FOUND)))
-    (asserts! (is-some (is-arbiter contract-caller)) ERR_NOT_ARBITER)
+    (asserts! (is-eq (is-arbiter contract-caller) (some true)) ERR_NOT_ARBITER)
     (asserts! (is-eq (get status assertion) STATUS_DISPUTED) ERR_INVALID_STATUS)
     (asserts!
       (or
