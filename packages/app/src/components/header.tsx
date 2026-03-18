@@ -15,11 +15,7 @@ import { cn } from "@/lib/utils";
 import { ConnectWalletButton } from "./connect-wallet-button";
 import { WalletProfileDialog } from "./wallet-profile-dialog";
 
-type NavLinkProps = {
-  label: string;
-  href: string;
-  external?: boolean;
-};
+type NavLinkProps = (typeof NAV_LINKS)[number];
 
 function NavLink({ label, href, external }: NavLinkProps) {
   const pathname = usePathname();
