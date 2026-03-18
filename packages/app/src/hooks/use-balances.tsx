@@ -1,5 +1,4 @@
 import type { UseQueryResult } from "@tanstack/react-query";
-import { StacksNetworkName } from "@stacks/network";
 import { useQuery } from "@tanstack/react-query";
 
 import { getSbtcAddress } from "@/lib/sbtc";

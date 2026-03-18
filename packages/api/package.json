@@ -1,14 +1,26 @@
 {
   "name": "@coo/api",
-  "module": "src/index.ts",
   "type": "module",
-  "devDependencies": {
-    "@types/bun": "catalog:",
-    "typescript": "catalog:"
+  "exports": {
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "@coo/sdk": "workspace:*",
-    "@stacks/blockchain-api-client": "8.14.2",
-    "@stacks/transactions": "7.3.1"
+    "@coo/core": "workspace:*",
+    "@hirosystems/chainhooks-client": "2.1.1",
+    "@hono/zod-validator": "0.7.6",
+    "@stacks/transactions": "7.3.1",
+    "drizzle-orm": "0.45.1",
+    "hono": "4.12.8",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "drizzle-kit": "0.31.10",
+    "wrangler": "4.75.0"
   }
 }

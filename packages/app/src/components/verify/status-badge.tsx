@@ -1,38 +1,38 @@
+import type { IconSvgElement } from "@hugeicons/react";
 import { Alert01Icon, CancelCircleIcon, CheckmarkCircle01Icon, Clock01Icon, HelpCircleIcon, InformationCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-import type { AssertionStatus } from "@/types/assertion";
-import { ASSERTION_STATUS } from "@/types/assertion";
+import type { AssertionStatus } from "@coo/core";
 
 import { Badge } from "../ui/badge";
 
 const STATUS_CONFIG = {
-  [ASSERTION_STATUS.OPEN]: {
+  open: {
     label: "Open",
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     icon: InformationCircleIcon,
   },
-  [ASSERTION_STATUS.DISPUTED]: {
+  disputed: {
     label: "Disputed",
     className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
     icon: Alert01Icon,
   },
-  [ASSERTION_STATUS.SETTLED]: {
+  settled: {
     label: "Settled",
     className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
     icon: CheckmarkCircle01Icon,
   },
-  [ASSERTION_STATUS.REJECTED]: {
+  rejected: {
     label: "Rejected",
     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     icon: CancelCircleIcon,
   },
-  [ASSERTION_STATUS.UNRESOLVED]: {
+  unresolved: {
     label: "Unresolved",
     className: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
     icon: HelpCircleIcon,
   },
-} as const;
+} as const satisfies Record<AssertionStatus, { label: string; className: string; icon: IconSvgElement }>;
 
 export function StatusBadge({ status }: { status: AssertionStatus }) {
   const config = STATUS_CONFIG[status];

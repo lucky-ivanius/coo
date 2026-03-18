@@ -1,6 +1,10 @@
 import type { createClient, StacksApiWebSocketClient } from "@stacks/blockchain-api-client";
 import type { BufferCV, PrincipalCV, TupleCV, UIntCV } from "@stacks/transactions";
+import { without0x } from "@stacks/common";
 import { Cl } from "@stacks/transactions";
+
+import type { AssertionEvent } from "@coo/core/event";
+import { assertedEventSchema, disputedEventSchema, rejectedEventSchema, settledEventSchema, unresolvedEventSchema } from "@coo/core/event";
 
 import type { LiteralStringAsciiCV } from "./cv";
 
@@ -60,70 +64,9 @@ export type CooUnresolvedEventCV = CooEventTupleCV<
 
 export type CooContractEventCV = CooAssertedEventCV | CooDisputedEventCV | CooSettledEventCV | CooRejectedEventCV | CooUnresolvedEventCV;
 
-export type CooEvent<TEventName extends string, TData> = {
-  txId: string;
-  event: TEventName;
-  data: TData;
-};
-
-export type CooAssertedEvent = CooEvent<
-  "asserted",
-  {
-    assertionId: Uint8Array;
-    assertedBy: string;
-    identifier: Uint8Array;
-    claim: Uint8Array;
-    bondSats: bigint;
-    liveness: bigint;
-    assertedAtBlock: bigint;
-  }
->;
-
-export type CooDisputedEvent = CooEvent<
-  "disputed",
-  {
-    assertionId: Uint8Array;
-    disputedBy: string;
-    disputedAtBlock: bigint;
-  }
->;
-
-export type CooSettledEvent = CooEvent<
-  "settled",
-  {
-    assertionId: Uint8Array;
-    settledBy: string;
-    settledAtBlock: bigint;
-  }
->;
-
-export type CooRejectedEvent = CooEvent<
-  "rejected",
-  {
-    assertionId: Uint8Array;
-    rejectedBy: string;
-    rejectedAtBlock: bigint;
-  }
->;
-
-export type CooUnresolvedEvent = CooEvent<
-  "unresolved",
-  {
-    assertionId: Uint8Array;
-    unresolvedBy: string;
-    unresolvedAtBlock: bigint;
-  }
->;
-
-export type CooContractEvent = CooAssertedEvent | CooDisputedEvent | CooSettledEvent | CooRejectedEvent | CooUnresolvedEvent;
-
-export const hexToBytes = (hex: string): Uint8Array => {
-  return Uint8Array.from(Buffer.from(hex, "hex"));
-};
-
 export const createCooEventSubscriber = (client: ReturnType<typeof createClient>, wsClient: StacksApiWebSocketClient) => {
   return {
-    subscribe: async (address: string, onEvent: (event: CooContractEvent) => void) => {
+    subscribe: async (address: string, onEvent: (event: AssertionEvent) => void) => {
       const txSubscription = await wsClient.subscribeAddressTransactions(address, async ({ tx_id }) => {
         const res = await client.GET("/extended/v1/tx/events", {
           params: {
@@ -140,6 +83,8 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
 
           const event = Cl.deserialize<CooContractEventCV>(e.contract_log.value.hex);
 
+          const txId = without0x(e.tx_id);
+
           switch (event.value.event.value) {
             case "asserted": {
               const {
@@ -148,27 +93,29 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooAssertedEventCV;
 
-              const assertionId = hexToBytes(value["assertion-id"].value);
+              const assertionId = without0x(value["assertion-id"].value);
+              const identifier = without0x(value.identifier.value);
+              const claim = without0x(value.claim.value);
+              const bondSats = Number.parseInt(value["bond-sats"].value.toString(), 10);
+              const liveness = Number.parseInt(value.liveness.value.toString(), 10);
               const assertedBy = value["asserted-by"].value;
-              const claim = hexToBytes(value.claim.value);
-              const assertedAtBlock = BigInt(value["asserted-at-block"].value);
-              const bondSats = BigInt(value["bond-sats"].value);
-              const identifier = hexToBytes(value.identifier.value);
-              const liveness = BigInt(value.liveness.value);
+              const assertedAtBlock = Number.parseInt(value["asserted-at-block"].value.toString(), 10);
 
-              onEvent({
-                txId: tx_id,
+              const eventData = assertedEventSchema.decode({
                 event: "asserted",
                 data: {
                   assertionId,
-                  assertedBy,
                   claim,
-                  assertedAtBlock,
                   bondSats,
                   identifier,
                   liveness,
+                  assertedBy,
+                  assertedAtBlock,
+                  assertedTxId: txId,
                 },
               });
+
+              onEvent(eventData);
               break;
             }
 
@@ -179,19 +126,21 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooSettledEventCV;
 
-              const assertionId = hexToBytes(value["assertion-id"].value);
+              const assertionId = without0x(value["assertion-id"].value);
               const settledBy = value["settled-by"].value;
-              const settledAtBlock = BigInt(value["settled-at-block"].value);
+              const settledAtBlock = Number.parseInt(value["settled-at-block"].value.toString(), 10);
 
-              onEvent({
-                txId: tx_id,
+              const eventData = settledEventSchema.decode({
                 event: "settled",
                 data: {
                   assertionId,
                   settledBy,
                   settledAtBlock,
+                  settledTxId: txId,
                 },
               });
+
+              onEvent(eventData);
               break;
             }
             case "disputed": {
@@ -201,19 +150,21 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooDisputedEventCV;
 
-              const assertionId = hexToBytes(value["assertion-id"].value);
+              const assertionId = without0x(value["assertion-id"].value);
               const disputedBy = value["disputed-by"].value;
-              const disputedAtBlock = BigInt(value["disputed-at-block"].value);
+              const disputedAtBlock = Number.parseInt(value["disputed-at-block"].value.toString(), 10);
 
-              onEvent({
-                txId: tx_id,
+              const eventData = disputedEventSchema.decode({
                 event: "disputed",
                 data: {
                   assertionId,
                   disputedBy,
                   disputedAtBlock,
+                  disputedTxId: txId,
                 },
               });
+
+              onEvent(eventData);
               break;
             }
             case "rejected": {
@@ -223,19 +174,21 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooRejectedEventCV;
 
-              const assertionId = hexToBytes(value["assertion-id"].value);
+              const assertionId = without0x(value["assertion-id"].value);
               const rejectedBy = value["rejected-by"].value;
-              const rejectedAtBlock = BigInt(value["rejected-at-block"].value);
+              const rejectedAtBlock = Number.parseInt(value["rejected-at-block"].value.toString(), 10);
 
-              onEvent({
-                txId: tx_id,
+              const eventData = rejectedEventSchema.decode({
                 event: "rejected",
                 data: {
                   assertionId,
                   rejectedBy,
                   rejectedAtBlock,
+                  rejectedTxId: txId,
                 },
               });
+
+              onEvent(eventData);
               break;
             }
             case "unresolved": {
@@ -245,19 +198,21 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
                 },
               } = event as CooUnresolvedEventCV;
 
-              const assertionId = hexToBytes(value["assertion-id"].value);
+              const assertionId = without0x(value["assertion-id"].value);
               const unresolvedBy = value["unresolved-by"].value;
-              const unresolvedAtBlock = BigInt(value["unresolved-at-block"].value);
+              const unresolvedAtBlock = Number.parseInt(value["unresolved-at-block"].value.toString(), 10);
 
-              onEvent({
-                txId: tx_id,
+              const eventData = unresolvedEventSchema.decode({
                 event: "unresolved",
                 data: {
                   assertionId,
                   unresolvedBy,
                   unresolvedAtBlock,
+                  unresolvedTxId: txId,
                 },
               });
+
+              onEvent(eventData);
               break;
             }
             default:

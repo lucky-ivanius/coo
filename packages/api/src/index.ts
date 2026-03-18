@@ -1,34 +1,16 @@
-import { connectWebSocketClient, createClient } from "@stacks/blockchain-api-client";
+import { Hono } from "hono";
 
-import { createCooEventSubscriber } from "@coo/sdk";
+import type { Env } from "./env";
+import { assertionsHandler } from "./handlers/assertions";
+import { webhookHandler } from "./handlers/webhook";
 
-const client = createClient({
-  baseUrl: "http://localhost:3999",
-});
-const wsClient = await connectWebSocketClient("http://localhost:3999");
+const app = new Hono<Env>();
 
-const eventSubscriber = createCooEventSubscriber(client, wsClient);
+app
+  .route("/assertions", assertionsHandler)
+  .route("/webhook", webhookHandler)
+  .onError((_err, c) => {
+    return c.json({ error: "unexpected_error" }, 500);
+  });
 
-const unsubscribe = await eventSubscriber.subscribe("ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.coo-core", async ({ event, data }) => {
-  switch (event) {
-    case "asserted":
-    case "disputed":
-    case "settled":
-    case "rejected":
-    case "unresolved":
-      // TODO: Store to db
-      break;
-    default:
-      break;
-  }
-});
-
-process.on("SIGINT", async () => {
-  await unsubscribe();
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  await unsubscribe();
-  process.exit(0);
-});
+export default app;

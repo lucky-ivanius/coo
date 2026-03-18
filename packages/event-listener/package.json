@@ -1,9 +1,10 @@
 {
-  "name": "@coo/sdk",
+  "name": "@coo/event-listener",
   "module": "src/index.ts",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
@@ -11,10 +12,9 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "@coo/core": "workspace:*",
+    "@coo/api": "workspace:*",
+    "@coo/sdk": "workspace:*",
     "@stacks/blockchain-api-client": "8.14.2",
-    "@stacks/common": "7.3.1",
-    "@stacks/transactions": "7.3.1",
-    "zod": "4.3.6"
+    "hono": "4.12.8"
   }
 }
