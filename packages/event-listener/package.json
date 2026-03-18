@@ -1,0 +1,18 @@
+{
+  "name": "@coo/event-listener",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@coo/sdk": "workspace:*",
+    "@stacks/blockchain-api-client": "8.14.2"
+  }
+}
