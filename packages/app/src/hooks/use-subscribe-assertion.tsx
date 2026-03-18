@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 
-import type { CooContractEvent } from "@coo/sdk";
+import type { AssertionEvent } from "@coo/core";
 import { createCooEventSubscriber } from "@coo/sdk";
 
 import { COO_CORE_CONTRACT } from "@/consts/contracts";
@@ -12,7 +12,7 @@ export const useSubscribeAssertionEvent = () => {
   const { client, wsClient } = useStacksClient();
 
   const subscribe = useCallback(
-    async (onEvent: (event: CooContractEvent) => void) => {
+    async (onEvent: (event: AssertionEvent) => void) => {
       if (unsubscribeRef.current) await unsubscribeRef.current();
 
       const eventSubscriber = createCooEventSubscriber(client, wsClient);

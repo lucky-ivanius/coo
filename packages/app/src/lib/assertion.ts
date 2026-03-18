@@ -1,18 +1,4 @@
-import type { Assertion } from "@/types/assertion";
-
-export function bytesToText(bytes: Uint8Array): string {
-  return new TextDecoder().decode(bytes);
-}
-
-export function textToBytes(text: string): Uint8Array {
-  return new TextEncoder().encode(text);
-}
-
-export function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import type { Assertion } from "@coo/core";
 
 export function truncateId(id: string): string {
   return `${id.slice(0, 8)}...${id.slice(-8)}`;
@@ -29,9 +15,4 @@ export function blocksToHuman(blocks: number, averageBlockTime: number): string 
 
 export function getExpiryBlock(assertion: Assertion): number {
   return assertion.assertedAtBlock + assertion.liveness;
-}
-
-/** Mirrors contract: (>= expiry-block stacks-block-height) */
-export function isWindowOpen(assertion: Assertion, currentBlock: number): boolean {
-  return getExpiryBlock(assertion) >= currentBlock;
 }

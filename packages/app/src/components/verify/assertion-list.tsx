@@ -1,6 +1,7 @@
 "use client";
 
-import type { Assertion } from "@/types/assertion";
+import type { Assertion } from "@coo/core";
+
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { AssertionCard } from "@/components/verify/assertion-card";
 

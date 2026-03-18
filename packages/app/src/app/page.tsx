@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-import type { Assertion } from "@/types/assertion";
+import type { Assertion } from "@coo/core";
+
 import { AssertionList } from "@/components/verify/assertion-list";
 import { AssertionsHeader } from "@/components/verify/assertions-header";
 import { useCurrentBlock } from "@/hooks/use-block";
 import { useSubscribeAssertionEvent } from "@/hooks/use-subscribe-assertion";
 import { useSubscribeBlock } from "@/hooks/use-subscribe-block";
-import { bytesToHex, bytesToText } from "@/lib/assertion";
-import { ASSERTION_STATUS } from "@/types/assertion";
 
 export default function VerifyPage() {
   const [currentBlock, setCurrentBlock] = useState<number>(0);
@@ -45,39 +44,43 @@ export default function VerifyPage() {
   useEffect(() => {
     if (!assertionEventSubscriberConnected) return;
 
-    subscribeAssertionEvent(({ txId, event, data }) => {
-      const assertionId = bytesToHex(data.assertionId);
-
+    subscribeAssertionEvent(({ event, data }) => {
       switch (event) {
         case "asserted": {
           const assertion: Assertion = {
-            id: assertionId,
-            identifier: bytesToText(data.identifier),
+            id: data.assertionId,
+            identifier: data.identifier,
             asserter: data.assertedBy,
-            claim: bytesToText(data.claim),
-            bondSats: Number(data.bondSats),
-            liveness: Number(data.liveness),
-            status: ASSERTION_STATUS.OPEN,
-            assertedTxId: txId,
-            assertedAtBlock: Number(data.assertedAtBlock),
+            claim: data.claim,
+            bondSats: data.bondSats,
+            liveness: data.liveness,
+            status: "open",
+            assertedAtBlock: data.assertedAtBlock,
+            assertedTxId: data.assertedTxId,
           };
 
-          setAssertions((prev) => (prev.some((a) => a.id === assertionId) ? prev : [assertion, ...prev]));
+          setAssertions((prev) => (prev.some((a) => a.id === data.assertionId) ? prev : [assertion, ...prev]));
 
           break;
         }
 
         case "settled": {
           setAssertions((prev) =>
-            prev.map((a) =>
-              a.id === assertionId
+            prev.map<Assertion>((a) =>
+              a.id === data.assertionId
                 ? {
                     ...a,
-                    status: ASSERTION_STATUS.SETTLED,
-                    resolver: a.status === ASSERTION_STATUS.DISPUTED ? data.settledBy : undefined,
+                    status: "settled",
                     settler: data.settledBy,
-                    settledTxId: txId,
-                    settledAtBlock: Number(data.settledAtBlock),
+                    settledAtBlock: data.settledAtBlock,
+                    settledTxId: data.settledTxId,
+                    ...(a.status === "disputed"
+                      ? {
+                          resolver: data.settledBy,
+                          resolvedAtBlock: data.settledAtBlock,
+                          resolvedTxId: data.settledTxId,
+                        }
+                      : {}),
                   }
                 : a
             )
@@ -88,9 +91,15 @@ export default function VerifyPage() {
 
         case "disputed": {
           setAssertions((prev) =>
-            prev.map((a) =>
-              a.id === assertionId
-                ? { ...a, status: ASSERTION_STATUS.DISPUTED, disputedTxId: txId, disputedAtBlock: Number(data.disputedAtBlock), disputer: data.disputedBy }
+            prev.map<Assertion>((a) =>
+              a.id === data.assertionId
+                ? {
+                    ...a,
+                    status: "disputed",
+                    disputer: data.disputedBy,
+                    disputedAtBlock: data.disputedAtBlock,
+                    disputedTxId: data.disputedTxId,
+                  }
                 : a
             )
           );
@@ -100,15 +109,14 @@ export default function VerifyPage() {
 
         case "rejected": {
           setAssertions((prev) =>
-            prev.map((a) =>
-              a.id === assertionId
+            prev.map<Assertion>((a) =>
+              a.id === data.assertionId
                 ? {
                     ...a,
-                    status: ASSERTION_STATUS.REJECTED,
+                    status: "rejected",
                     resolver: data.rejectedBy,
-                    rejectedTxId: txId,
-                    rejectedAtBlock: Number(data.rejectedAtBlock),
-                    rejectedBy: data.rejectedBy,
+                    resolvedAtBlock: data.rejectedAtBlock,
+                    resolvedTxId: data.rejectedTxId,
                   }
                 : a
             )
@@ -119,14 +127,14 @@ export default function VerifyPage() {
 
         case "unresolved": {
           setAssertions((prev) =>
-            prev.map((a) =>
-              a.id === assertionId
+            prev.map<Assertion>((a) =>
+              a.id === data.assertionId
                 ? {
                     ...a,
-                    status: ASSERTION_STATUS.UNRESOLVED,
+                    status: "unresolved",
                     resolver: data.unresolvedBy,
-                    unresolvedTxId: txId,
-                    unresolvedAtBlock: Number(data.unresolvedAtBlock),
+                    resolvedAtBlock: data.unresolvedAtBlock,
+                    resolvedTxId: data.unresolvedTxId,
                   }
                 : a
             )

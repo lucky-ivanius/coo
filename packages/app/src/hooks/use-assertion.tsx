@@ -2,17 +2,18 @@ import { request } from "@stacks/connect";
 import { Cl, Pc } from "@stacks/transactions";
 import { useMutation } from "@tanstack/react-query";
 
-import type { Assertion } from "@/types/assertion";
+import type { Assertion } from "@coo/core";
+
 import { COO_CORE_CONTRACT } from "@/consts/contracts";
 import { getSbtcAddress } from "@/lib/sbtc";
 
 import { useWallet } from "./use-wallet";
 
 export type CreateAssertionArgs = {
-  identifier: Uint8Array;
-  claim: Uint8Array;
-  bondSats: bigint;
-  liveness?: bigint;
+  identifier: string;
+  claim: string;
+  bondSats: number;
+  liveness: number | null;
 };
 
 export const useCreateAssertion = () => {
@@ -28,7 +29,12 @@ export const useCreateAssertion = () => {
         contract: COO_CORE_CONTRACT,
         functionName: "assert",
         network,
-        functionArgs: [Cl.buffer(args.identifier), Cl.buffer(args.claim), Cl.uint(args.bondSats), args.liveness ? Cl.some(Cl.uint(args.liveness)) : Cl.none()],
+        functionArgs: [
+          Cl.bufferFromHex(args.identifier),
+          Cl.bufferFromHex(args.claim),
+          Cl.uint(args.bondSats),
+          args.liveness ? Cl.some(Cl.uint(args.liveness)) : Cl.none(),
+        ],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,

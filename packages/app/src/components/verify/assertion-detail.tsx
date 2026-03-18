@@ -3,28 +3,26 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import {
   Alert01Icon,
+  BitcoinReceiptIcon,
   BitcoinShieldIcon,
   Blockchain01Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  HelpCircleIcon,
   HourglassIcon,
   InformationCircleIcon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { bytesToAscii, hexToBytes, with0x } from "@stacks/common";
 import Link from "next/link";
-import { toast } from "sonner";
 
-import type { Assertion } from "@/types/assertion";
-import { Button } from "@/components/ui/button";
-import { SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
-import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
+import type { Assertion } from "@coo/core";
+
 import { useAverageBlockTime } from "@/hooks/use-block";
-import { blocksToHuman, truncateId } from "@/lib/assertion";
+import { blocksToHuman } from "@/lib/assertion";
 import { getTransactionExplorerUrl } from "@/lib/explorer";
 import { formatSbtc } from "@/lib/format";
-import { ASSERTION_STATUS } from "@/types/assertion";
 
 // ── Meta row ─────────────────────────────────────────────────────────────────
 
@@ -40,19 +38,6 @@ function MetaRow({ icon, label, children, iconClassName }: { icon: IconSvgElemen
   );
 }
 
-// ── Liveness meta ─────────────────────────────────────────────────────────────
-
-function LivenessMeta({ assertion }: { assertion: Assertion }) {
-  const { data: averageBlockTime } = useAverageBlockTime();
-
-  return (
-    <span className="text-sm">
-      <span className="font-medium text-foreground">{assertion.liveness.toLocaleString()} blocks</span>
-      <span className="text-muted-foreground"> ({blocksToHuman(assertion.liveness, averageBlockTime ?? 5)})</span>
-    </span>
-  );
-}
-
 // ── Assertion detail ──────────────────────────────────────────────────────────
 
 export interface AssertionDetailProps {
@@ -63,195 +48,137 @@ export interface AssertionDetailProps {
 }
 
 export function AssertionDetail({ assertion, currentBlock, blocksLeft }: AssertionDetailProps) {
-  // const [claimView, setClaimView] = useState<ClaimView>("text");
-
-  const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
-  const canDispute = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft !== null && blocksLeft > 0;
-
-  const settleAssertion = useSettleAssertion(assertion);
-  const disputeAssertion = useDisputeAssertion(assertion);
-
-  const handleDispute = async () => {
-    try {
-      const result = await disputeAssertion.mutateAsync();
-
-      if (!result.txid) {
-        toast.info("Transaction sent!", {
-          position: "top-center",
-        });
-
-        return;
-      }
-
-      toast.info("Transaction sent!", {
-        description: (
-          <span className="text-muted-foreground text-xs">
-            Transaction ID:{" "}
-            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
-              0x{result.txid}
-            </Link>
-          </span>
-        ),
-        position: "top-center",
-      });
-    } catch (e) {
-      const message = e instanceof Error ? e.message.trim() : "Unknown error";
-
-      if (message === "User rejected request") {
-        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
-          description: <span className="text-muted-foreground text-xs">{message}</span>,
-          position: "top-center",
-        });
-      }
-    }
-  };
-
-  const handleSettle = async () => {
-    try {
-      const result = await settleAssertion.mutateAsync();
-
-      if (!result.txid) {
-        toast.info("Transaction sent!", {
-          position: "top-center",
-        });
-
-        return;
-      }
-
-      toast.info("Transaction sent!", {
-        description: (
-          <span className="text-muted-foreground text-xs">
-            Transaction ID:{" "}
-            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
-              0x{result.txid}
-            </Link>
-          </span>
-        ),
-        position: "top-center",
-      });
-    } catch (e) {
-      const message = e instanceof Error ? e.message.trim() : "Unknown error";
-
-      if (message === "User rejected request") {
-        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
-          description: <span className="text-muted-foreground text-xs">{message}</span>,
-          position: "top-center",
-        });
-      }
-    }
-  };
+  const { data: averageBlockTime } = useAverageBlockTime();
 
   return (
-    <SheetContent side="right" className="flex flex-col gap-0 p-0 lg:w-[40vw] lg:max-w-[40vw]!">
-      {/* Header */}
-      <SheetHeader className="gap-2 border-border border-b px-5 py-4">
-        <div className="flex flex-wrap items-center gap-2 pr-8">
-          {awaitingSettlement ? <AwaitingSettlementBadge /> : <StatusBadge status={assertion.status} />}
+    <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
+      {/* Claim */}
+      <div>
+        <div className="mb-2.5 flex items-center justify-between">
+          <span className="text-muted-foreground text-xs uppercase tracking-wider">Claim</span>
         </div>
-        <SheetTitle className="font-mono font-normal text-muted-foreground text-xs">{truncateId(assertion.id)}</SheetTitle>
-        <SheetDescription className="sr-only">Full details for assertion {assertion.id}</SheetDescription>
-      </SheetHeader>
+        <p className="text-foreground text-sm leading-relaxed">{bytesToAscii(hexToBytes(assertion.claim))}</p>
+      </div>
 
-      {/* Scrollable body */}
-      <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-5">
-        {/* Claim */}
-        <div>
-          <div className="mb-2.5 flex items-center justify-between">
-            <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">Claim</span>
-            {/*<ClaimToggle view={claimView} onChange={setClaimView} />*/}
-          </div>
-          <p className="text-foreground text-sm leading-relaxed">{assertion.claim}</p>
-          {/*{claimView === "text" ? (
-          ) : (
-            <code className="block break-all rounded-md bg-muted px-3 py-2.5 font-mono text-muted-foreground text-xs">
-              0x{Buffer.from(new TextEncoder().encode(assertion.claim)).toString("hex")}
-            </code>
-          )}*/}
-        </div>
+      <div className="border-border/60 border-t" />
 
-        <div className="border-border/60 border-t" />
+      {/* Metadata */}
+      <div className="flex flex-col gap-3">
+        <MetaRow icon={BitcoinShieldIcon} label="Bond">
+          <p className="font-mono text-sm">
+            <span>{assertion.bondSats.toLocaleString()} sats</span>
+            <span className="text-muted-foreground"> ≈ {formatSbtc(assertion.bondSats)} sBTC</span>
+          </p>
+        </MetaRow>
 
-        {/* Metadata */}
-        <div className="flex flex-col gap-3">
-          <MetaRow icon={InformationCircleIcon} label="Identifier">
-            <p className="text-sm">{assertion.identifier}</p>
-          </MetaRow>
+        <MetaRow icon={Clock01Icon} label="Liveness">
+          <p className="font-mono text-sm">
+            <span>{assertion.liveness.toLocaleString()} blocks</span>
+            <span className="text-muted-foreground"> ({blocksToHuman(assertion.liveness, averageBlockTime ?? 5)})</span>
+          </p>
+        </MetaRow>
 
-          <MetaRow icon={BitcoinShieldIcon} label="Bond">
-            <p className="text-sm">
-              <span className="font-medium">{assertion.bondSats.toLocaleString()} sats</span>
-              <span className="text-muted-foreground"> · {formatSbtc(assertion.bondSats)} sBTC</span>
+        <MetaRow icon={UserIcon} label="Asserter">
+          <p className="cursor-default break-all font-mono text-sm" title={assertion.asserter}>
+            {assertion.asserter}
+          </p>
+        </MetaRow>
+
+        <MetaRow icon={Blockchain01Icon} label="Asserted at block">
+          <p className="font-mono text-sm tabular-nums">{assertion.assertedAtBlock.toLocaleString()}</p>
+        </MetaRow>
+
+        <MetaRow icon={BitcoinReceiptIcon} label="Assertion Transaction ID">
+          <Link
+            target="_blank"
+            rel="noopener noreferrer"
+            href={getTransactionExplorerUrl(assertion.assertedTxId)}
+            className="break-all font-mono text-sm underline"
+          >
+            {with0x(assertion.assertedTxId)}
+          </Link>
+        </MetaRow>
+
+        {assertion.status === "open" && blocksLeft !== null && blocksLeft > 0 && (
+          <MetaRow icon={HourglassIcon} label="Dispute window closes in">
+            <p className="font-mono text-sm">
+              <span>{(currentBlock + blocksLeft).toLocaleString()} </span>
+              <span className="font-normal text-muted-foreground/70">≈ {blocksLeft.toLocaleString()} blocks remaining</span>
             </p>
           </MetaRow>
+        )}
 
-          <MetaRow icon={Clock01Icon} label="Liveness">
-            <LivenessMeta assertion={assertion} />
-          </MetaRow>
-
-          <MetaRow icon={UserIcon} label="Asserter">
-            <p className="cursor-default break-all font-mono text-sm" title={assertion.asserter}>
-              {assertion.asserter}
-            </p>
-          </MetaRow>
-
-          <MetaRow icon={Blockchain01Icon} label="Asserted at block">
-            <p className="cursor-default break-all font-mono text-sm">{assertion.assertedAtBlock.toLocaleString()}</p>
-          </MetaRow>
-
-          {assertion.disputer && (
+        {assertion.disputer && assertion.status === "disputed" && assertion.disputedAtBlock && assertion.disputedTxId && (
+          <>
             <MetaRow icon={UserIcon} label="Disputer" iconClassName="size-5 shrink-0 text-yellow-600 dark:text-yellow-500">
               <p className="cursor-default break-all font-mono text-sm" title={assertion.disputer}>
                 {assertion.disputer}
               </p>
             </MetaRow>
-          )}
+            <MetaRow icon={Alert01Icon} label="Disputed at block" iconClassName="size-5 shrink-0 text-yellow-600 dark:text-yellow-500">
+              <p className="font-mono text-sm tabular-nums">{assertion.disputedAtBlock.toLocaleString()}</p>
+            </MetaRow>
+            <MetaRow icon={BitcoinReceiptIcon} label="Dispute Transaction ID" iconClassName="size-5 shrink-0 text-yellow-600 dark:text-yellow-500">
+              <Link
+                target="_blank"
+                rel="noopener noreferrer"
+                href={getTransactionExplorerUrl(assertion.disputedTxId)}
+                className="break-all font-mono text-sm underline"
+              >
+                {with0x(assertion.disputedTxId)}
+              </Link>
+            </MetaRow>
+          </>
+        )}
 
-          {canDispute && blocksLeft !== null && blocksLeft > 0 && (
-            <MetaRow icon={HourglassIcon} label="Dispute window closes in">
-              <p className="font-medium font-mono text-foreground text-sm tabular-nums">
-                {(currentBlock + blocksLeft).toLocaleString()}{" "}
-                <span className="font-normal text-muted-foreground">≈ {blocksLeft.toLocaleString()} blocks remaining</span>
+        {assertion.resolver && assertion.resolvedAtBlock && assertion.resolvedTxId && (
+          <>
+            <MetaRow icon={UserIcon} label="Resolver" iconClassName="size-5 shrink-0">
+              <p className="cursor-default break-all font-mono text-sm" title={assertion.resolver}>
+                {assertion.resolver}
               </p>
             </MetaRow>
-          )}
 
-          {assertion.disputedAtBlock && (
-            <MetaRow icon={Alert01Icon} label="Disputed at block" iconClassName="size-5 shrink-0 text-yellow-600 dark:text-yellow-500">
-              <p className="font-medium text-foreground text-sm tabular-nums">{assertion.disputedAtBlock.toLocaleString()}</p>
+            <MetaRow icon={Alert01Icon} label="Resolved at block" iconClassName="size-5 shrink-0">
+              <p className="font-mono text-sm tabular-nums">{assertion.resolvedAtBlock.toLocaleString()}</p>
             </MetaRow>
-          )}
 
-          {assertion.settledAtBlock && (
+            <MetaRow icon={BitcoinReceiptIcon} label="Resolve Transaction ID" iconClassName="size-5 shrink-0">
+              <Link
+                target="_blank"
+                rel="noopener noreferrer"
+                href={getTransactionExplorerUrl(assertion.resolvedTxId)}
+                className="break-all font-mono text-sm underline"
+              >
+                {with0x(assertion.resolvedTxId)}
+              </Link>
+            </MetaRow>
+          </>
+        )}
+
+        {assertion.settler && assertion.status === "settled" && assertion.settledAtBlock && assertion.settledTxId && (
+          <>
+            <MetaRow icon={UserIcon} label="Settler" iconClassName="size-5 shrink-0 text-green-600 dark:text-green-500">
+              <p className="cursor-default break-all font-mono text-sm" title={assertion.settler}>
+                {assertion.settler}
+              </p>
+            </MetaRow>
             <MetaRow icon={CheckmarkCircle02Icon} label="Settled at block" iconClassName="size-5 shrink-0 text-green-600 dark:text-green-500">
-              <p className="font-medium text-foreground text-sm tabular-nums">{assertion.settledAtBlock.toLocaleString()}</p>
+              <p className="font-mono text-sm tabular-nums">{assertion.settledAtBlock.toLocaleString()}</p>
             </MetaRow>
-          )}
-
-          {assertion.rejectedAtBlock && (
-            <MetaRow icon={Alert01Icon} label="Rejected at block" iconClassName="size-5 shrink-0 text-destructive">
-              <p className="font-medium text-foreground text-sm tabular-nums">{assertion.rejectedAtBlock.toLocaleString()}</p>
+            <MetaRow icon={BitcoinReceiptIcon} label="Settlement Transaction ID" iconClassName="size-5 shrink-0 text-green-600 dark:text-green-500">
+              <Link
+                target="_blank"
+                rel="noopener noreferrer"
+                href={getTransactionExplorerUrl(assertion.settledTxId)}
+                className="break-all font-mono text-sm underline"
+              >
+                {with0x(assertion.settledTxId)}
+              </Link>
             </MetaRow>
-          )}
-        </div>
+          </>
+        )}
       </div>
-
-      {canDispute && (
-        <SheetFooter className="border-border border-t">
-          <Button variant="destructive" className="w-full" onClick={handleDispute} disabled={disputeAssertion.isPending}>
-            <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
-            Dispute this assertion
-          </Button>
-        </SheetFooter>
-      )}
-
-      {awaitingSettlement && (
-        <SheetFooter className="border-border border-t">
-          <Button className="w-full" onClick={handleSettle} disabled={settleAssertion.isPending}>
-            <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
-            Settle this assertion
-          </Button>
-        </SheetFooter>
-      )}
-    </SheetContent>
+    </div>
   );
 }

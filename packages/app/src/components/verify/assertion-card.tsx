@@ -2,20 +2,22 @@
 
 import { Alert01Icon, CheckmarkCircle02Icon, HourglassIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { bytesToAscii, hexToBytes, with0x } from "@stacks/common";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { Assertion } from "@/types/assertion";
+import type { Assertion } from "@coo/core";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
-import { Sheet } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
 import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
+import { truncateId } from "@/lib/assertion";
 import { getTransactionExplorerUrl } from "@/lib/explorer";
-import { ASSERTION_STATUS } from "@/types/assertion";
 
 export interface AssertionCardProps {
   assertion: Assertion;
@@ -26,11 +28,12 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const blocksLeft = useAssertionCountdown(assertion, currentBlock);
 
-  const awaitingSettlement = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft === 0;
-  const canDispute = assertion.status === ASSERTION_STATUS.OPEN && blocksLeft !== null && blocksLeft > 0;
-  const disputed = assertion.status === ASSERTION_STATUS.DISPUTED;
-  const settled = assertion.status === ASSERTION_STATUS.SETTLED;
-  const rejected = assertion.status === ASSERTION_STATUS.REJECTED;
+  const awaitingSettlement = assertion.status === "open" && blocksLeft === 0;
+  const canDispute = assertion.status === "open" && blocksLeft !== null && blocksLeft > 0;
+  const disputed = assertion.status === "disputed";
+  const settled = assertion.status === "settled";
+  const rejected = assertion.status === "rejected";
+  const unresolved = assertion.status === "unresolved";
 
   const settleAssertion = useSettleAssertion(assertion);
   const disputeAssertion = useDisputeAssertion(assertion);
@@ -52,7 +55,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
           <span className="text-muted-foreground text-xs">
             Transaction ID:{" "}
             <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
-              0x{result.txid}
+              {with0x(result.txid)}
             </Link>
           </span>
         ),
@@ -87,7 +90,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
           <span className="text-muted-foreground text-xs">
             Transaction ID:{" "}
             <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid!)} className="underline">
-              0x{result.txid}
+              {with0x(result.txid)}
             </Link>
           </span>
         ),
@@ -113,7 +116,9 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
         </CardHeader>
 
         <CardContent>
-          <p className="line-clamp-2 min-h-10 text-foreground text-sm leading-relaxed lg:line-clamp-1 lg:min-h-fit">{assertion.claim}</p>
+          <p className="line-clamp-2 min-h-10 text-foreground text-sm leading-relaxed lg:line-clamp-1 lg:min-h-fit">
+            {bytesToAscii(hexToBytes(assertion.claim))}
+          </p>
         </CardContent>
 
         <CardFooter className="gap-3 pt-3">
@@ -171,14 +176,53 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
 
           {rejected && (
             <p className="text-muted-foreground text-sm">
-              Rejected at block <span className="font-medium text-foreground tabular-nums">{assertion.rejectedAtBlock?.toLocaleString()}</span>
+              Rejected at block <span className="font-medium text-foreground tabular-nums">{assertion.resolvedAtBlock?.toLocaleString()}</span>
+            </p>
+          )}
+
+          {unresolved && (
+            <p className="text-muted-foreground text-sm">
+              Unresolved at block <span className="font-medium text-foreground tabular-nums">{assertion.resolvedAtBlock?.toLocaleString()}</span>
             </p>
           )}
         </CardFooter>
       </Card>
+
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
-        {/* ── Detail sheet ── */}
-        <AssertionDetail assertion={assertion} currentBlock={currentBlock} blocksLeft={blocksLeft} />
+        <SheetContent side="right" className="flex flex-col gap-0 p-0 lg:w-[40vw] lg:max-w-[40vw]!">
+          {/* Header */}
+          <SheetHeader className="gap-2 border-border border-b px-5 py-4">
+            <div className="flex flex-wrap items-center gap-2 pr-8">
+              {awaitingSettlement ? <AwaitingSettlementBadge /> : <StatusBadge status={assertion.status} />}
+            </div>
+            <SheetTitle className="font-mono font-normal text-muted-foreground text-xs">
+              <span className="inline sm:hidden">{truncateId(with0x(assertion.id))}</span>
+              <span className="hidden sm:inline">{with0x(assertion.id)}</span>
+            </SheetTitle>
+            <SheetDescription className="sr-only">Full details for assertion {with0x(assertion.id)}</SheetDescription>
+          </SheetHeader>
+
+          {/* Scrollable body */}
+          <AssertionDetail assertion={assertion} currentBlock={currentBlock} blocksLeft={blocksLeft} />
+
+          {canDispute && (
+            <SheetFooter className="border-border border-t">
+              <Button variant="destructive" className="w-full" onClick={handleDispute} disabled={disputeAssertion.isPending}>
+                <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
+                Dispute this assertion
+              </Button>
+            </SheetFooter>
+          )}
+
+          {awaitingSettlement && (
+            <SheetFooter className="border-border border-t">
+              <Button className="w-full" onClick={handleSettle} disabled={settleAssertion.isPending}>
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
+                Settle this assertion
+              </Button>
+            </SheetFooter>
+          )}
+        </SheetContent>
       </Sheet>
     </>
   );
