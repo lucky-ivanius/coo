@@ -24,8 +24,6 @@ export const useIsArbiter = (address: string | null, network: StacksNetworkName)
         network,
       });
 
-      console.log({ response });
-
       if (response.type === ClarityType.OptionalSome) {
         return true;
       }
