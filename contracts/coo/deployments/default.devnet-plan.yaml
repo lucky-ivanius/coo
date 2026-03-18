@@ -37,7 +37,7 @@ plan:
     - transaction-type: contract-publish
       contract-name: coo-core
       expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-      cost: 114380
+      cost: 116480
       path: contracts/core.clar
       anchor-block-only: true
       clarity-version: 4
