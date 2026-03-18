@@ -9,8 +9,8 @@ export const assertionSchema = z.object({
   identifier: z.hex(),
   claim: z.hex(),
 
-  bondSats: z.number(),
-  liveness: z.number(),
+  bondSats: z.int().nonnegative(),
+  liveness: z.int().nonnegative(),
 
   status: assertionStatusSchema,
 
@@ -19,16 +19,16 @@ export const assertionSchema = z.object({
   settler: z.string().nullable().optional(),
   resolver: z.string().nullable().optional(),
 
-  assertedAtBlock: z.number(),
+  assertedAtBlock: z.int().nonnegative(),
   assertedTxId: z.hex(),
 
-  disputedAtBlock: z.number().nullable().optional(),
+  disputedAtBlock: z.int().nonnegative().nullable().optional(),
   disputedTxId: z.hex().nullable().optional(),
 
-  settledAtBlock: z.number().nullable().optional(),
+  settledAtBlock: z.int().nonnegative().nullable().optional(),
   settledTxId: z.hex().nullable().optional(),
 
-  resolvedAtBlock: z.number().nullable().optional(),
+  resolvedAtBlock: z.int().nonnegative().nullable().optional(),
   resolvedTxId: z.hex().nullable().optional(),
 });
 export type Assertion = z.infer<typeof assertionSchema>;
