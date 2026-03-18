@@ -92,3 +92,38 @@ export const useDisputeAssertion = (assertion: Assertion) => {
     },
   });
 };
+
+export const resolveResult = ["settled", "rejected", "unresolved"] as const;
+export type ResolveResult = (typeof resolveResult)[number];
+
+export const resolveResultMap = {
+  settled: 2,
+  rejected: 3,
+  unresolved: 4,
+} as const satisfies Record<ResolveResult, number>;
+
+export const useResolveAssertion = (assertion: Assertion) => {
+  const { network, connected, connect } = useWallet();
+
+  return useMutation({
+    mutationFn: async (result: ResolveResult) => {
+      if (!connected) await connect();
+
+      const sBtcTransferPostCond = Pc.principal(COO_CORE_CONTRACT)
+        .willSendEq(assertion.bondSats * 2)
+        .ft(getSbtcAddress(network), "sbtc-token");
+
+      const res = await request("stx_callContract", {
+        contract: COO_CORE_CONTRACT,
+        functionName: "resolve",
+        network,
+        functionArgs: [Cl.bufferFromHex(assertion.id), Cl.uint(resolveResultMap[result])],
+        postConditions: [sBtcTransferPostCond],
+        postConditionMode: "deny",
+        sponsored: false,
+      });
+
+      return res;
+    },
+  });
+};

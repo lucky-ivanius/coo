@@ -3,10 +3,13 @@
 import type { VariantProps } from "class-variance-authority";
 import { UserIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { toast } from "sonner";
 
+import { useArbiter } from "@/hooks/use-arbiter";
 import { useSbtcBalance, useStxBalance } from "@/hooks/use-balances";
 import { useWallet } from "@/hooks/use-wallet";
 import { formatSbtc, formatStx } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { truncateAddress } from "@/lib/wallet";
 
 import type { buttonVariants } from "./ui/button";
@@ -32,6 +35,7 @@ export function WalletProfileDialog({ size = "default" }: Props) {
   const { disconnect, stxAddress, network } = useWallet();
   const { data: stxBalance } = useStxBalance(stxAddress);
   const { data: sbtcBalance } = useSbtcBalance(stxAddress);
+  const { isArbiter } = useArbiter();
 
   const networkLabel = network.replace(/^./, (c) => c.toUpperCase());
 
@@ -50,23 +54,26 @@ export function WalletProfileDialog({ size = "default" }: Props) {
         <DialogHeader className="w-full flex-row items-start justify-between">
           <div className="flex flex-col gap-1">
             <DialogTitle className="font-semibold text-muted-foreground text-xs uppercase tracking-widest">Wallet</DialogTitle>
-            <DialogDescription className="font-medium font-mono text-foreground text-sm">{stxAddress ?? "—"}</DialogDescription>
+            <DialogDescription className="font-medium font-mono text-foreground text-sm">
+              <Button
+                variant="link"
+                size="sm"
+                className="p-0"
+                onClick={async () => {
+                  if (!stxAddress) return;
+
+                  await navigator.clipboard.writeText(stxAddress);
+
+                  toast.info("Address copied to clipboard", { position: "top-center" });
+                }}
+              >
+                {stxAddress ?? "—"}
+              </Button>{" "}
+              {isArbiter && <Badge>Arbiter</Badge>}
+            </DialogDescription>
           </div>
           <Badge variant="secondary">{networkLabel}</Badge>
         </DialogHeader>
-
-        {/*<div className="flex items-start justify-between px-5 pt-5 pb-4">
-          <div className="flex flex-col gap-1">
-            <p className="font-semibold text-[10px] text-muted-foreground uppercase tracking-widest">Wallet</p>
-            <p className="font-medium font-mono text-sm">{stxAddress ?? "—"}</p>
-          </div>
-          <span className="mt-0.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-semibold text-[10px] text-primary tracking-wide">
-            {networkLabel}
-          </span>
-        </div>*/}
-
-        {/* Divider */}
-        {/*<div className="mx-5 h-px bg-border" />*/}
 
         {/* Balances */}
         <div className="flex flex-col gap-3">

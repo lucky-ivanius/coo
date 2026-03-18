@@ -63,6 +63,8 @@
   bool
 )
 
+(map-set arbiter-map tx-sender true)
+
 ;; private functions
 
 (define-private (derive-assertion-id
@@ -107,7 +109,7 @@
   (> stacks-block-height expiry-block)
 )
 
-(define-read-only (get-arbiter (address principal))
+(define-read-only (is-arbiter (address principal))
   (map-get? arbiter-map address)
 )
 
@@ -117,6 +119,12 @@
   (begin
     (asserts! (is-eq contract-caller CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
     (asserts! (is-none (map-get? arbiter-map address)) ERR_ARBITER_ALREADY_EXISTS)
+    (print {
+      event: "arbiter-added",
+      data: {
+        address: address,
+      },
+    })
     (ok (map-set arbiter-map address true))
   )
 )
@@ -125,6 +133,12 @@
   (begin
     (asserts! (is-eq contract-caller CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
     (asserts! (is-some (map-get? arbiter-map address)) ERR_ARBITER_NOT_FOUND)
+    (print {
+      event: "arbiter-removed",
+      data: {
+        address: address,
+      },
+    })
     (ok (map-delete arbiter-map address))
   )
 )
@@ -283,7 +297,7 @@
     (resolve-status uint)
   )
   (let ((assertion (unwrap! (map-get? assertion-map assertion-id) ERR_ASSERTION_NOT_FOUND)))
-    (asserts! (is-some (map-get? arbiter-map contract-caller)) ERR_NOT_ARBITER)
+    (asserts! (is-eq (is-arbiter contract-caller) (some true)) ERR_NOT_ARBITER)
     (asserts! (is-eq (get status assertion) STATUS_DISPUTED) ERR_INVALID_STATUS)
     (asserts!
       (or
