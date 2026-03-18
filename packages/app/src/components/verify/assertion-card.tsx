@@ -2,7 +2,7 @@
 
 import { Alert01Icon, CheckmarkCircle02Icon, HourglassIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { bytesToAscii, hexToBytes, with0x } from "@stacks/common";
+import { bytesToUtf8, hexToBytes, with0x } from "@stacks/common";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -89,7 +89,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
         description: (
           <span className="text-muted-foreground text-xs">
             Transaction ID:{" "}
-            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid!)} className="underline">
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
               {with0x(result.txid)}
             </Link>
           </span>
@@ -117,7 +117,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
 
         <CardContent>
           <p className="line-clamp-2 min-h-10 text-foreground text-sm leading-relaxed lg:line-clamp-1 lg:min-h-fit">
-            {bytesToAscii(hexToBytes(assertion.claim))}
+            {bytesToUtf8(hexToBytes(assertion.claim))}
           </p>
         </CardContent>
 

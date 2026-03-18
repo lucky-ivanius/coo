@@ -8,13 +8,11 @@ import {
   Blockchain01Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
-  HelpCircleIcon,
   HourglassIcon,
-  InformationCircleIcon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { bytesToAscii, hexToBytes, with0x } from "@stacks/common";
+import { bytesToUtf8, hexToBytes, with0x } from "@stacks/common";
 import Link from "next/link";
 
 import type { Assertion } from "@coo/core";
@@ -57,7 +55,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft }: Asserti
         <div className="mb-2.5 flex items-center justify-between">
           <span className="text-muted-foreground text-xs uppercase tracking-wider">Claim</span>
         </div>
-        <p className="text-foreground text-sm leading-relaxed">{bytesToAscii(hexToBytes(assertion.claim))}</p>
+        <p className="text-foreground text-sm leading-relaxed">{bytesToUtf8(hexToBytes(assertion.claim))}</p>
       </div>
 
       <div className="border-border/60 border-t" />

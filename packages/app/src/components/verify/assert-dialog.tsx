@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { asciiToBytes, bytesToHex } from "@stacks/common";
+import { bytesToHex, utf8ToBytes } from "@stacks/common";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ const assertSchema = z.object({
   claim: z
     .string()
     .min(1, "Claim is required")
-    .refine((v) => asciiToBytes(v).length <= 2048, { error: "Claim must be less than 2048 characters buffer" }),
+    .refine((v) => utf8ToBytes(v).length <= 2048, { error: "Claim must be less than 2048 characters buffer" }),
   bondSats: z
     .number({
       error: "Bond must be a valid number",
@@ -52,8 +52,8 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
   async function handleSubmit(values: AssertFormValues) {
     try {
       const result = await createAssertion.mutateAsync({
-        identifier: bytesToHex(asciiToBytes("statement")),
-        claim: bytesToHex(asciiToBytes(values.claim)),
+        identifier: bytesToHex(utf8ToBytes("statement")),
+        claim: bytesToHex(utf8ToBytes(values.claim)),
         bondSats: values.bondSats,
         liveness: values.liveness,
       });
