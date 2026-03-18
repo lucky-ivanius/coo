@@ -10,7 +10,7 @@ import * as tables from "../lib/db/schema";
 
 const webhookHandler = new Hono<Env>();
 
-webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => {
+const webhookRoutes = webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => {
   const { event, data } = c.req.valid("json");
 
   const db = drizzle(c.env.COO_DB);
@@ -50,20 +50,24 @@ webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => 
 
       await db
         .update(tables.assertions)
-        .set({ disputer: data.disputedBy, disputedTxId: data.disputedTxId, disputedAtBlock: data.disputedAtBlock, status: "disputed" });
+        .set({ disputer: data.disputedBy, disputedTxId: data.disputedTxId, disputedAtBlock: data.disputedAtBlock, status: "disputed" })
+        .where(eq(tables.assertions.id, data.assertionId));
       break;
     }
     case "settled": {
       const [assertion] = await db.select().from(tables.assertions).where(eq(tables.assertions.id, data.assertionId));
       if (!assertion) break;
 
-      await db.update(tables.assertions).set({
-        settler: data.settledBy,
-        settledTxId: data.settledTxId,
-        settledAtBlock: data.settledAtBlock,
-        status: "settled",
-        ...(assertion.status === "disputed" ? { resolver: data.settledBy, resolvedTxId: data.settledTxId, resolvedAtBlock: data.settledAtBlock } : {}),
-      });
+      await db
+        .update(tables.assertions)
+        .set({
+          settler: data.settledBy,
+          settledTxId: data.settledTxId,
+          settledAtBlock: data.settledAtBlock,
+          status: "settled",
+          ...(assertion.status === "disputed" ? { resolver: data.settledBy, resolvedTxId: data.settledTxId, resolvedAtBlock: data.settledAtBlock } : {}),
+        })
+        .where(eq(tables.assertions.id, data.assertionId));
       break;
     }
     case "rejected": {
@@ -72,7 +76,8 @@ webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => 
 
       await db
         .update(tables.assertions)
-        .set({ resolver: data.rejectedBy, resolvedTxId: data.rejectedTxId, resolvedAtBlock: data.rejectedAtBlock, status: "rejected" });
+        .set({ resolver: data.rejectedBy, resolvedTxId: data.rejectedTxId, resolvedAtBlock: data.rejectedAtBlock, status: "rejected" })
+        .where(eq(tables.assertions.id, data.assertionId));
       break;
     }
     case "unresolved": {
@@ -81,7 +86,8 @@ webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => 
 
       await db
         .update(tables.assertions)
-        .set({ resolver: data.unresolvedBy, resolvedTxId: data.unresolvedTxId, resolvedAtBlock: data.unresolvedAtBlock, status: "unresolved" });
+        .set({ resolver: data.unresolvedBy, resolvedTxId: data.unresolvedTxId, resolvedAtBlock: data.unresolvedAtBlock, status: "unresolved" })
+        .where(eq(tables.assertions.id, data.assertionId));
       break;
     }
     default:
@@ -91,4 +97,4 @@ webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => 
   return c.json(undefined, 200);
 });
 
-export { webhookHandler };
+export { webhookHandler, webhookRoutes };
