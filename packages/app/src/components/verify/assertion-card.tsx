@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert01Icon, CheckmarkCircle02Icon, HourglassIcon } from "@hugeicons/core-free-icons";
+import { Alert01Icon, CancelCircleIcon, CheckmarkCircle02Icon, HelpCircleIcon, HourglassIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { bytesToUtf8, hexToBytes, with0x } from "@stacks/common";
 import Link from "next/link";
@@ -9,12 +9,14 @@ import { toast } from "sonner";
 
 import type { Assertion } from "@coo/core";
 
+import type { ResolveResult } from "@/hooks/use-assertion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AssertionDetail } from "@/components/verify/assertion-detail";
 import { AwaitingSettlementBadge, StatusBadge } from "@/components/verify/status-badge";
-import { useDisputeAssertion, useSettleAssertion } from "@/hooks/use-assertion";
+import { useArbiter } from "@/hooks/use-arbiter";
+import { useDisputeAssertion, useResolveAssertion, useSettleAssertion } from "@/hooks/use-assertion";
 import { useAssertionCountdown } from "@/hooks/use-assertion-countdown";
 import { truncateId } from "@/lib/assertion";
 import { getTransactionExplorerUrl } from "@/lib/explorer";
@@ -28,6 +30,8 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
   const [detailOpen, setDetailOpen] = useState(false);
   const blocksLeft = useAssertionCountdown(assertion, currentBlock);
 
+  const { isArbiter } = useArbiter();
+
   const awaitingSettlement = assertion.status === "open" && blocksLeft === 0;
   const canDispute = assertion.status === "open" && blocksLeft !== null && blocksLeft > 0;
   const disputed = assertion.status === "disputed";
@@ -37,6 +41,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
 
   const settleAssertion = useSettleAssertion(assertion);
   const disputeAssertion = useDisputeAssertion(assertion);
+  const resolveAssertion = useResolveAssertion(assertion);
 
   const handleDispute = async () => {
     try {
@@ -108,6 +113,41 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
     }
   };
 
+  const handleResolve = async (resolveResult: ResolveResult) => {
+    try {
+      const result = await resolveAssertion.mutateAsync(resolveResult);
+
+      if (!result.txid) {
+        toast.info("Transaction sent!", {
+          position: "top-center",
+        });
+
+        return;
+      }
+
+      toast.info("Transaction sent!", {
+        description: (
+          <span className="text-muted-foreground text-xs">
+            Transaction ID:{" "}
+            <Link target="_blank" rel="noopener noreferrer" href={getTransactionExplorerUrl(result.txid)} className="underline">
+              {with0x(result.txid)}
+            </Link>
+          </span>
+        ),
+        position: "top-center",
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message.trim() : "Unknown error";
+
+      if (message === "User rejected request") {
+        toast.error(<span className="text-destructive">Failed to send transaction</span>, {
+          description: <span className="text-muted-foreground text-xs">{message}</span>,
+          position: "top-center",
+        });
+      }
+    }
+  };
+
   return (
     <>
       <Card onClick={() => setDetailOpen(true)} className="cursor-pointer gap-2 py-5 transition-shadow hover:shadow-md">
@@ -134,7 +174,6 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
 
                   return handleDispute();
                 }}
-                // TODO: Disable while wallet is not connected or tx is pending.
               >
                 <HugeiconsIcon icon={Alert01Icon} className="size-4" strokeWidth={2} />
                 Dispute
@@ -155,18 +194,60 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
 
                 return handleSettle();
               }}
-              // TODO: Disable while wallet is not connected or tx is pending.
             >
               <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
               Settle
             </Button>
           )}
 
-          {disputed && (
-            <p className="text-muted-foreground text-sm">
-              Disputed at block <span className="font-medium text-foreground tabular-nums">{assertion.disputedAtBlock?.toLocaleString()}</span>
-            </p>
-          )}
+          {disputed &&
+            (isArbiter ? (
+              <div className="flex items-center justify-start gap-2">
+                <Button
+                  size="sm"
+                  disabled={resolveAssertion.isPending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    return handleResolve("settled");
+                  }}
+                  className="bg-green-600 hover:bg-green-600/80"
+                >
+                  <HugeiconsIcon icon={CheckmarkCircle02Icon} className="size-4" strokeWidth={2} />
+                  True
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={resolveAssertion.isPending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    return handleResolve("rejected");
+                  }}
+                  className="bg-red-600 hover:bg-red-600/80"
+                >
+                  <HugeiconsIcon icon={CancelCircleIcon} className="size-4" strokeWidth={2} />
+                  False
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={resolveAssertion.isPending}
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    return handleResolve("unresolved");
+                  }}
+                  className="bg-gray-500 hover:bg-gray-500/80"
+                >
+                  <HugeiconsIcon icon={HelpCircleIcon} className="size-4" strokeWidth={2} />
+                  Unresolved
+                </Button>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Disputed at block <span className="font-medium text-foreground tabular-nums">{assertion.disputedAtBlock?.toLocaleString()}</span>
+              </p>
+            ))}
 
           {settled && (
             <p className="text-muted-foreground text-sm">
