@@ -33,7 +33,7 @@ export const useCreateAssertion = () => {
           Cl.bufferFromHex(args.identifier),
           Cl.bufferFromHex(args.claim),
           Cl.uint(args.bondSats),
-          args.liveness ? Cl.some(Cl.uint(args.liveness)) : Cl.none(),
+          args.liveness !== null ? Cl.some(Cl.uint(args.liveness)) : Cl.none(),
         ],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
