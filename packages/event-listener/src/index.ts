@@ -24,12 +24,15 @@ const unsubscribe = await eventSubscriber.subscribe(cooContractAddress, async (e
     case "settled":
     case "rejected":
     case "unresolved": {
-      const result = await webhookApi.index.$post({
-        json: event,
-      });
+      try {
+        const result = await webhookApi.index.$post({
+          json: event,
+        });
 
-      console.log(`Webhook sent for event: ${event.event}, assertionId: ${event.data.assertionId} result: ${result.status}`);
-
+        console.log(`Webhook sent for event: ${event.event}, assertionId: ${event.data.assertionId} result: ${result.status}`);
+      } catch (error) {
+        console.error(`Webhook failed for event: ${event.event}, assertionId: ${event.data.assertionId}`, error);
+      }
       break;
     }
     default:
