@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 
 import { getStacksClient, getStacksWsClient } from "@/lib/stacks-client";
 
+import { ArbiterProvider } from "./arbiter-provider";
 import { StacksClientProvider } from "./stacks-client-provider";
 import { WalletProvider } from "./wallet-provider";
 
@@ -19,7 +20,9 @@ export const AppProviders = ({ children }: PropsWithChildren) => {
     <QueryClientProvider client={queryClient}>
       <StacksClientProvider client={stacksClient} wsClient={stacksWsClient}>
         <ThemeProvider>
-          <WalletProvider network={(process.env.NEXT_PUBLIC_STACKS_NETWORK as StacksNetworkName) ?? "testnet"}>{children}</WalletProvider>
+          <WalletProvider network={(process.env.NEXT_PUBLIC_STACKS_NETWORK as StacksNetworkName) ?? "testnet"}>
+            <ArbiterProvider>{children}</ArbiterProvider>
+          </WalletProvider>
         </ThemeProvider>
       </StacksClientProvider>
     </QueryClientProvider>
