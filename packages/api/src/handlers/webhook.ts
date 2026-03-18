@@ -45,9 +45,6 @@ const webhookRoutes = webhookHandler.post("/", zValidator("json", assertionEvent
       break;
     }
     case "disputed": {
-      const [assertion] = await db.select().from(tables.assertions).where(eq(tables.assertions.id, data.assertionId));
-      if (!assertion) break;
-
       await db
         .update(tables.assertions)
         .set({ disputer: data.disputedBy, disputedTxId: data.disputedTxId, disputedAtBlock: data.disputedAtBlock, status: "disputed" })
@@ -71,9 +68,6 @@ const webhookRoutes = webhookHandler.post("/", zValidator("json", assertionEvent
       break;
     }
     case "rejected": {
-      const [assertion] = await db.select().from(tables.assertions).where(eq(tables.assertions.id, data.assertionId));
-      if (!assertion) break;
-
       await db
         .update(tables.assertions)
         .set({ resolver: data.rejectedBy, resolvedTxId: data.rejectedTxId, resolvedAtBlock: data.rejectedAtBlock, status: "rejected" })
@@ -81,9 +75,6 @@ const webhookRoutes = webhookHandler.post("/", zValidator("json", assertionEvent
       break;
     }
     case "unresolved": {
-      const [assertion] = await db.select().from(tables.assertions).where(eq(tables.assertions.id, data.assertionId));
-      if (!assertion) break;
-
       await db
         .update(tables.assertions)
         .set({ resolver: data.unresolvedBy, resolvedTxId: data.unresolvedTxId, resolvedAtBlock: data.unresolvedAtBlock, status: "unresolved" })
