@@ -101,7 +101,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
               const assertedBy = value["asserted-by"].value;
               const assertedAtBlock = Number(value["asserted-at-block"].value);
 
-              const eventData = assertedEventSchema.encode({
+              const eventData = assertedEventSchema.decode({
                 event: "asserted",
                 data: {
                   assertionId,
