@@ -12,7 +12,9 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@coo/api": "workspace:*",
     "@coo/sdk": "workspace:*",
-    "@stacks/blockchain-api-client": "8.14.2"
+    "@stacks/blockchain-api-client": "8.14.2",
+    "hono": "4.12.8"
   }
 }
