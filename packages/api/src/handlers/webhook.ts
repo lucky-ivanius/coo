@@ -2,6 +2,8 @@ import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
+import { bearerAuth } from "hono/bearer-auth";
+import { createMiddleware } from "hono/factory";
 
 import { assertionEventSchema } from "@coo/core";
 
@@ -10,7 +12,9 @@ import * as tables from "../lib/db/schema";
 
 const webhookHandler = new Hono<Env>();
 
-const webhookRoutes = webhookHandler.post("/", zValidator("json", assertionEventSchema), async (c) => {
+const webhookAuth = createMiddleware<Env>((c, next) => bearerAuth({ token: c.env.WEBHOOK_SECRET })(c, next));
+
+const webhookRoutes = webhookHandler.post("/", webhookAuth, zValidator("json", assertionEventSchema), async (c) => {
   const { event, data } = c.req.valid("json");
 
   const db = drizzle(c.env.COO_DB);
