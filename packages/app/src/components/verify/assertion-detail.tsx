@@ -9,6 +9,7 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   HourglassIcon,
+  TickDouble02Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -137,7 +138,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft }: Asserti
               </p>
             </MetaRow>
 
-            <MetaRow icon={Alert01Icon} label="Resolved at block" iconClassName="size-5 shrink-0">
+            <MetaRow icon={TickDouble02Icon} label="Resolved at block" iconClassName="size-5 shrink-0">
               <p className="font-mono text-sm tabular-nums">{assertion.resolvedAtBlock.toLocaleString()}</p>
             </MetaRow>
 
