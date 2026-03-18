@@ -44,11 +44,15 @@ const unsubscribe = await eventSubscriber.subscribe(cooContractAddress, async (e
 });
 console.info(`Listening for events on contract: ${cooContractAddress}`);
 
-const onExit = async () => {
-  await unsubscribe();
-  process.exit(0);
+const onExit = async (signal: NodeJS.Signals) => {
+  await unsubscribe()
+    .catch((error) => {
+      console.error(`Failed to unsubscribe on ${signal}`, error);
+    })
+    .finally(() => {
+      process.exit(0);
+    });
 };
 
-process.on("SIGINT", onExit);
-
-process.on("SIGTERM", onExit);
+process.on("SIGINT", () => void onExit("SIGINT"));
+process.on("SIGTERM", () => void onExit("SIGTERM"));
