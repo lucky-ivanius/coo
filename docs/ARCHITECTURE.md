@@ -1,76 +1,169 @@
 # Architecture
 
-COO is composed of four contracts. Each has a single, well-defined responsibility.
+COO is a single Clarity contract (`core.clar`) that owns the full assertion lifecycle.
 
 ---
 
-## Contracts
+## Data Model
 
-### Core — *The Inbox*
+### Assertion Map
 
-Every interaction starts here. Stores the assertion registry and owns the protocol clock.
+Every assertion is stored in `assertion-map`, keyed by a `(buff 32)` assertion ID.
 
-- **Assertion Registry** — records who submitted a claim, the hash of the claim, how many sats of sBTC bond they staked, and the liveness window. The full claim is not stored on-chain — only its hash. The full claim is emitted as an event at submission time for off-chain watchers.
-- **Block Timer** — uses Stacks block height as the clock. No external timer, no trusted timestamp. Stacks produces fast blocks roughly every 5 seconds (independent of Bitcoin's ~10 min block time), so a liveness of 1440 blocks is roughly 2 hours.
-
-### Settlement — *The Easy Judge*
-
-Handles the happy path, which is almost every case. When the liveness window expires with no dispute, any party can call `settle`. The contract checks the block height, confirms no dispute flag exists, transfers the sBTC bond back to the asserter, and writes the result to the Truth Store.
-
-No governance, no voting, no external calls — just a block check and a token transfer.
-
-### Dispute — *The Hard Judge*
-
-Only activated when someone challenges a claim. The disputer calls `dispute(assertionId)` — no counter-claim is provided. The disputer is simply saying *"this assertion is wrong"* and posting an sBTC bond equal to the asserter's to back that challenge. Both bonds are locked and the claim is flagged as `DISPUTED`. Normal settlement freezes.
-
-**Arbiter Voting** then takes over — a multisig of trusted addresses votes on the correct outcome. Once the threshold is met, two outcomes are possible:
-
-- **Assertion upheld** (asserter was right): asserter receives both bonds. Claim written to Truth Store as TRUE. Terminal state: `SETTLED`.
-- **Assertion rejected** (disputer was right): disputer receives both bonds. Nothing written to Truth Store. Terminal state: `REJECTED`.
-
-### Truth Store — *The Memory*
-
-An append-only map of verified results:
-
-```
-assertionId → { asserter, settled-at-block, disputed }
+```clarity
+{
+  asserter:            principal,
+  disputer:            (optional principal),
+  claim-hash:          (buff 32),
+  bond-sats:           uint,
+  liveness:            uint,
+  status:              uint,
+  asserted-at-block:   uint,
+  disputed-at-block:   (optional uint),
+  settled-at-block:    (optional uint),
+  rejected-at-block:   (optional uint),
+  unresolved-at-block: (optional uint),
+}
 ```
 
-Only writable by the Settlement and Dispute contracts (on the upheld path). Readable by anyone. Consumers call `get-truth(assertionId)` and receive either a verified entry or nothing — never a false positive. Every entry in the Truth Store is guaranteed to be a verified TRUE claim.
+The full claim is **not** stored on-chain — only its `sha256` hash. The full claim is emitted as a `print` event at submission time for off-chain watchers.
+
+### Arbiter Map
+
+A simple `principal → bool` allowlist. The contract owner (deployer) is the initial arbiter. New arbiters are added or removed via `add-arbiter` / `remove-arbiter`, both restricted to the contract owner.
+
+---
+
+## Assertion ID Derivation
+
+The assertion ID is deterministic — derived from `sha256(identifier ++ claim ++ bond-sats ++ liveness ++ asserted-at-block)`. This makes every assertion content-addressable and prevents duplicate submissions for the same inputs at the same block.
+
+---
+
+## Protocol Parameters
+
+| Parameter | Value | Description |
+|---|---|---|
+| `DEFAULT_LIVENESS` | 1 440 blocks | ~2 hours at ~5 s/block |
+| `MIN_LIVENESS` | 1 block | Floor for custom liveness values |
+| `MIN_BOND_SATS` | 10 000 sats | Minimum sBTC bond per assertion |
+
+---
+
+## Public Functions
+
+### `assert`
+
+Submits a new assertion. Transfers `bond-sats` of sBTC from the caller to the contract. Liveness defaults to `DEFAULT_LIVENESS` if not provided.
+
+### `settle`
+
+Settles an open assertion after its liveness window expires with no dispute. Returns the sBTC bond to the asserter. Can be called by anyone.
+
+### `dispute`
+
+Challenges an open assertion within its liveness window. The disputer posts a matching sBTC bond. Both bonds are locked and the assertion moves to `DISPUTED`.
+
+### `resolve`
+
+Resolves a disputed assertion. Restricted to whitelisted arbiters. Three outcomes:
+
+- **Settled** — asserter was right. Asserter receives both bonds (2× bond).
+- **Rejected** — disputer was right. Disputer receives both bonds (2× bond).
+- **Unresolved** — no clear answer. Each party receives their own bond back.
+
+### `add-arbiter` / `remove-arbiter`
+
+Contract owner manages the arbiter allowlist.
+
+---
+
+## Read-Only Functions
+
+| Function | Returns |
+|---|---|
+| `get-assertion(id)` | Full assertion tuple or `none` |
+| `get-default-liveness` | `DEFAULT_LIVENESS` constant |
+| `get-min-bond-sats` | `MIN_BOND_SATS` constant |
+| `is-window-open(expiry)` | `true` if `expiry ≥ stacks-block-height` |
+| `is-window-closed(expiry)` | `true` if `stacks-block-height > expiry` |
+| `is-arbiter(address)` | `(some true)` or `none` |
+
+---
+
+## Events
+
+All state transitions emit `print` events for off-chain indexing:
+
+| Event | Emitted by |
+|---|---|
+| `asserted` | `assert` — includes full `claim` body |
+| `settled` | `settle` or `resolve` (settled path) |
+| `disputed` | `dispute` |
+| `rejected` | `resolve` (rejected path) |
+| `unresolved` | `resolve` (unresolved path) |
+| `arbiter-added` | `add-arbiter` |
+| `arbiter-removed` | `remove-arbiter` |
+
+---
+
+## Error Codes
+
+Errors follow an HTTP-inspired numbering scheme:
+
+| Code | Constant | Meaning |
+|---|---|---|
+| `u8400001` | `ERR_WINDOW_OPEN` | Liveness window still open (cannot settle) |
+| `u8400002` | `ERR_WINDOW_CLOSED` | Liveness window already closed (cannot dispute) |
+| `u8400003` | `ERR_INVALID_STATUS` | Assertion is not in the required status |
+| `u8400004` | `ERR_TRANSFER_FAILED` | sBTC transfer failed |
+| `u8400100` | `ERR_ASSERTION_BOND_TOO_LOW` | Bond below `MIN_BOND_SATS` |
+| `u8400101` | `ERR_ASSERTION_INVALID_LIVENESS` | Custom liveness below `MIN_LIVENESS` |
+| `u8403000` | `ERR_NOT_CONTRACT_OWNER` | Caller is not the contract owner |
+| `u8403200` | `ERR_NOT_ARBITER` | Caller is not a whitelisted arbiter |
+| `u8404100` | `ERR_ASSERTION_NOT_FOUND` | Assertion ID not in registry |
+| `u8404200` | `ERR_ARBITER_NOT_FOUND` | Address not in arbiter allowlist |
+| `u8409100` | `ERR_ASSERTION_ALREADY_EXISTS` | Assertion ID already registered |
+| `u8409200` | `ERR_ARBITER_ALREADY_EXISTS` | Address already an arbiter |
+| `u8500000` | `ERR_SERIALIZATION_FAILED` | Internal serialization error |
 
 ---
 
 ## Claim Flow
 
 ```
-ASSERTED → SETTLED                       (happy path)
-         ↘ DISPUTED → SETTLED / REJECTED
+OPEN → SETTLED                                          (happy path)
+     ↘ DISPUTED → SETTLED / REJECTED / UNRESOLVED
 ```
 
 ```mermaid
 sequenceDiagram
     participant A as Asserter
-    participant OO as COO Contract
+    participant C as Core Contract
     participant D as Disputer
-    participant G as Arbiters
+    participant G as Arbiter
 
-    A->>OO: assert(identifier, claim, bond-sats, liveness?)
-    Note over OO: assertionId = sha256(identifier ++ claim ++ bond-sats ++ liveness)<br/>claim-hash stored on-chain · full claim emitted as event<br/>liveness = provided value or DEFAULT_LIVENESS<br/>sBTC bond transferred from asserter · Status: ASSERTED
+    A->>C: assert(identifier, claim, bond-sats, liveness?)
+    Note over C: assertion-id = sha256(identifier ++ claim ++ bond-sats ++ liveness ++ block)<br/>claim-hash stored on-chain · full claim emitted as event<br/>liveness = provided value or DEFAULT_LIVENESS<br/>sBTC bond transferred from asserter · Status: OPEN
 
     alt No dispute within liveness window
-        A->>OO: settle(assertionId)
-        OO-->>A: Transfers sBTC bond back ✅
-        Note over OO: Claim written to Truth Store as TRUE<br/>Status: SETTLED (terminal)
+        A->>C: settle(assertion-id)
+        C-->>A: Transfers sBTC bond back ✅
+        Note over C: Status: SETTLED (terminal)
     else Disputer disagrees within liveness window
-        D->>OO: dispute(assertionId)
-        Note over OO: Disputer transfers matching sBTC bond<br/>No counter-claim needed — just a challenge<br/>Both bonds locked · Status: DISPUTED
-        G->>OO: resolve(assertionId)
-        alt Arbiters uphold the assertion (asserter was right)
-            OO-->>A: Asserter gets own bond + disputer bond ✅
-            Note over OO: Claim written to Truth Store as TRUE<br/>Status: SETTLED (terminal)
-        else Arbiters reject the assertion (disputer was right)
-            OO-->>D: Disputer gets own bond + asserter bond ✅
-            Note over OO: Assertion invalidated — nothing written to Truth Store<br/>Status: REJECTED (terminal)
+        D->>C: dispute(assertion-id)
+        Note over C: Disputer transfers matching sBTC bond<br/>Both bonds locked · Status: DISPUTED
+        G->>C: resolve(assertion-id, resolve-status)
+        alt Settled — asserter was right
+            C-->>A: Asserter gets 2× bond ✅
+            Note over C: Status: SETTLED (terminal)
+        else Rejected — disputer was right
+            C-->>D: Disputer gets 2× bond ✅
+            Note over C: Status: REJECTED (terminal)
+        else Unresolved — no clear answer
+            C-->>A: Asserter gets own bond back
+            C-->>D: Disputer gets own bond back
+            Note over C: Status: UNRESOLVED (terminal)
         end
     end
 ```
@@ -79,18 +172,20 @@ sequenceDiagram
 
 ## State Machine
 
-Every `assertionId` moves through exactly these states:
+Every `assertion-id` moves through exactly these states:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ASSERTED : asserter submits identifier + claim + sBTC bond\n(assertionId = sha256(identifier ++ claim ++ bond-sats ++ liveness)\nliveness = provided or DEFAULT_LIVENESS)
+    [*] --> OPEN : asserter submits identifier + claim + sBTC bond\n(assertion-id = sha256(identifier ++ claim ++ bond ++ liveness ++ block)\nliveness = provided or DEFAULT_LIVENESS)
 
-    ASSERTED --> SETTLED : liveness expires, no dispute raised
-    ASSERTED --> DISPUTED : disputer posts matching sBTC bond\n(no counter-claim, just a challenge)
+    OPEN --> SETTLED : liveness expires, no dispute raised\nbond returned to asserter
+    OPEN --> DISPUTED : disputer posts matching sBTC bond
 
-    DISPUTED --> SETTLED : arbiters confirm asserter was right\ntruth written to Truth Store ✅\nasserter wins both bonds
-    DISPUTED --> REJECTED : arbiters confirm disputer was right\nassertion invalidated — nothing written\ndisputer wins both bonds
+    DISPUTED --> SETTLED : arbiter resolves in asserter's favor\nasserter wins both bonds (2×)
+    DISPUTED --> REJECTED : arbiter resolves in disputer's favor\ndisputer wins both bonds (2×)
+    DISPUTED --> UNRESOLVED : arbiter declares unresolvable\nboth parties get own bond back
 
-    SETTLED --> [*] : terminal · truth on-chain
-    REJECTED --> [*] : terminal · asserter opens new submission to retry
+    SETTLED --> [*] : terminal
+    REJECTED --> [*] : terminal
+    UNRESOLVED --> [*] : terminal
 ```

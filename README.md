@@ -11,32 +11,35 @@ Trustless Assertion Layer for the Stacks Ecosystem.
 Claims move through a simple state machine:
 
 ```
-ASSERTED → SETTLED                       (happy path, ~99% of cases)
-         ↘ DISPUTED → SETTLED / REJECTED
+OPEN → SETTLED                                          (happy path, ~99% of cases)
+     ↘ DISPUTED → SETTLED / REJECTED / UNRESOLVED
 ```
 
-Bond economics enforce honesty. Bonds are denominated in **sBTC**. The protocol enforces `bond ≥ MIN_BOND_SATS`, making lying a net loss as long as one honest disputer is watching.
+Bond economics enforce honesty. Bonds are denominated in **sBTC**. The protocol enforces `bond ≥ MIN_BOND_SATS` (10 000 sats), making lying a net loss as long as one honest disputer is watching.
 
 ---
 
-## Components
+## Contract
 
-| Name | Role |
+`core.clar` owns the full assertion lifecycle — submission, settlement, dispute, and resolution.
+
+| Capability | Description |
 |---|---|
-| **Core** | Stores assertions, owns the block-height clock |
-| **Settlement** | Handles the happy path — checks liveness, releases bonds, writes truth |
-| **Dispute** | Activated on challenge — locks bonds, routes arbiter voting, slashes loser |
-| **Truth Store** | Append-only map of verified results. Read by any consumer via `get-truth` |
+| **Assertion Registry** | Stores assertions keyed by a deterministic `assertion-id` derived from `sha256(identifier ++ claim ++ bond-sats ++ liveness ++ asserted-at-block)` |
+| **Settlement** | Happy path — after liveness expires with no dispute, anyone can call `settle` to return the bond |
+| **Dispute** | Challenge path — a disputer posts a matching bond to flag the assertion |
+| **Resolution** | Arbiter path — a whitelisted arbiter resolves disputed assertions as settled, rejected, or unresolved |
+| **Arbiter Management** | Contract owner maintains an allowlist of trusted arbiter addresses |
 
 ---
 
-## Using the Truth Store
+## Reading Assertions
 
-Any contract can read a verified result:
+Any contract can read an assertion:
 
 ```clarity
-(contract-call? .truth-store get-truth assertion-id)
-;; => (some { asserter: ST1..., settled-at-block: u12345, disputed: false })
+(contract-call? .coo-core get-assertion assertion-id)
+;; => (some { asserter: ST1..., status: u2, bond-sats: u10000, ... })
 ```
 
 ---
@@ -45,16 +48,17 @@ Any contract can read a verified result:
 
 - **Language** — Clarity (Stacks)
 - **Bond token** — sBTC (SIP-010)
-- **Liveness default** — 1440 blocks (~2 hrs, at ~5s/block)
-- **Arbiter model** — Multisig
+- **Liveness default** — 1 440 blocks (~2 hrs, at ~5 s/block)
+- **Arbiter model** — Allowlist (contract-owner managed)
 - **Network** — Stacks Testnet
 
 ---
 
 ## Docs
 
-- [Architecture](./docs/ARCHITECTURE.md) — contracts, claim flow, state machine
+- [Architecture](./docs/ARCHITECTURE.md) — contract layout, claim flow, state machine
 - [Economics](./docs/ECONOMICS.md) — bond rule, incentive table, known limitations
+- [Roadmap](./docs/ROADMAP.md) — planned features
 
 ---
 
