@@ -8,19 +8,20 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "@/components/ui/sheet";
+import { NAV_LINKS } from "@/consts/nav";
 import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 
 import { ConnectWalletButton } from "./connect-wallet-button";
 import { WalletProfileDialog } from "./wallet-profile-dialog";
 
-const NAV_LINKS = [
-  { label: "Verify", href: "/" },
-  { label: "Vote", href: "/vote" },
-  { label: "Docs", href: "https://docs.clarityoracle.xyz", external: true },
-];
+type NavLinkProps = {
+  label: string;
+  href: string;
+  external?: boolean;
+};
 
-function NavLink({ label, href, external }: (typeof NAV_LINKS)[number]) {
+function NavLink({ label, href, external }: NavLinkProps) {
   const pathname = usePathname();
 
   return (
