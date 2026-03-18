@@ -119,6 +119,12 @@
   (begin
     (asserts! (is-eq contract-caller CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
     (asserts! (is-none (map-get? arbiter-map address)) ERR_ARBITER_ALREADY_EXISTS)
+    (print {
+      event: "arbiter-added",
+      data: {
+        address: address,
+      },
+    })
     (ok (map-set arbiter-map address true))
   )
 )
@@ -127,6 +133,12 @@
   (begin
     (asserts! (is-eq contract-caller CONTRACT_OWNER) ERR_NOT_CONTRACT_OWNER)
     (asserts! (is-some (map-get? arbiter-map address)) ERR_ARBITER_NOT_FOUND)
+    (print {
+      event: "arbiter-removed",
+      data: {
+        address: address,
+      },
+    })
     (ok (map-delete arbiter-map address))
   )
 )
