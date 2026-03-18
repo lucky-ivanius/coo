@@ -6,11 +6,15 @@
     ".": "./src/index.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "catalog:",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@coo/core": "workspace:*",
     "@stacks/blockchain-api-client": "8.14.2",
-    "@stacks/transactions": "7.3.1"
+    "@stacks/common": "7.3.1",
+    "@stacks/transactions": "7.3.1",
+    "zod": "4.3.6"
   }
 }
