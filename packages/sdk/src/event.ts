@@ -96,10 +96,10 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
               const assertionId = without0x(value["assertion-id"].value);
               const identifier = without0x(value.identifier.value);
               const claim = without0x(value.claim.value);
-              const bondSats = Number(value["bond-sats"].value);
-              const liveness = Number(value.liveness.value);
+              const bondSats = Number.parseInt(value["bond-sats"].value.toString(), 10);
+              const liveness = Number.parseInt(value.liveness.value.toString(), 10);
               const assertedBy = value["asserted-by"].value;
-              const assertedAtBlock = Number(value["asserted-at-block"].value);
+              const assertedAtBlock = Number.parseInt(value["asserted-at-block"].value.toString(), 10);
 
               const eventData = assertedEventSchema.decode({
                 event: "asserted",
@@ -128,7 +128,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
 
               const assertionId = without0x(value["assertion-id"].value);
               const settledBy = value["settled-by"].value;
-              const settledAtBlock = Number(value["settled-at-block"].value);
+              const settledAtBlock = Number.parseInt(value["settled-at-block"].value.toString(), 10);
 
               const eventData = settledEventSchema.decode({
                 event: "settled",
@@ -152,7 +152,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
 
               const assertionId = without0x(value["assertion-id"].value);
               const disputedBy = value["disputed-by"].value;
-              const disputedAtBlock = Number(value["disputed-at-block"].value);
+              const disputedAtBlock = Number.parseInt(value["disputed-at-block"].value.toString(), 10);
 
               const eventData = disputedEventSchema.decode({
                 event: "disputed",
@@ -176,7 +176,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
 
               const assertionId = without0x(value["assertion-id"].value);
               const rejectedBy = value["rejected-by"].value;
-              const rejectedAtBlock = Number(value["rejected-at-block"].value);
+              const rejectedAtBlock = Number.parseInt(value["rejected-at-block"].value.toString(), 10);
 
               const eventData = rejectedEventSchema.decode({
                 event: "rejected",
@@ -200,7 +200,7 @@ export const createCooEventSubscriber = (client: ReturnType<typeof createClient>
 
               const assertionId = without0x(value["assertion-id"].value);
               const unresolvedBy = value["unresolved-by"].value;
-              const unresolvedAtBlock = Number(value["unresolved-at-block"].value);
+              const unresolvedAtBlock = Number.parseInt(value["unresolved-at-block"].value.toString(), 10);
 
               const eventData = unresolvedEventSchema.decode({
                 event: "unresolved",
