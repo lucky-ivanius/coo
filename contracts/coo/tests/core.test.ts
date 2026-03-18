@@ -237,7 +237,7 @@ describe("Core", () => {
       const { result } = simnet.callPublicFn(contractName, "add-arbiter", [Cl.standardPrincipal(wallet3)], deployer);
       expect(result).toBeOk(Cl.bool(true));
 
-      const arbiter = simnet.callReadOnlyFn(contractName, "get-arbiter", [Cl.standardPrincipal(wallet3)], deployer);
+      const arbiter = simnet.callReadOnlyFn(contractName, "is-arbiter", [Cl.standardPrincipal(wallet3)], deployer);
       expect(arbiter.result).toBeSome(Cl.bool(true));
     });
 
@@ -261,7 +261,7 @@ describe("Core", () => {
       const { result } = simnet.callPublicFn(contractName, "remove-arbiter", [Cl.standardPrincipal(wallet3)], deployer);
       expect(result).toBeOk(Cl.bool(true));
 
-      const arbiter = simnet.callReadOnlyFn(contractName, "get-arbiter", [Cl.standardPrincipal(wallet3)], deployer);
+      const arbiter = simnet.callReadOnlyFn(contractName, "is-arbiter", [Cl.standardPrincipal(wallet3)], deployer);
       expect(arbiter.result).toBeNone();
     });
 
