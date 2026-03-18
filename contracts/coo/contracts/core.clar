@@ -63,6 +63,8 @@
   bool
 )
 
+(map-set arbiter-map tx-sender true)
+
 ;; private functions
 
 (define-private (derive-assertion-id
@@ -107,7 +109,7 @@
   (> stacks-block-height expiry-block)
 )
 
-(define-read-only (get-arbiter (address principal))
+(define-read-only (is-arbiter (address principal))
   (map-get? arbiter-map address)
 )
 
@@ -283,7 +285,7 @@
     (resolve-status uint)
   )
   (let ((assertion (unwrap! (map-get? assertion-map assertion-id) ERR_ASSERTION_NOT_FOUND)))
-    (asserts! (is-some (map-get? arbiter-map contract-caller)) ERR_NOT_ARBITER)
+    (asserts! (is-some (is-arbiter contract-caller)) ERR_NOT_ARBITER)
     (asserts! (is-eq (get status assertion) STATUS_DISPUTED) ERR_INVALID_STATUS)
     (asserts!
       (or
