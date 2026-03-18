@@ -9,7 +9,7 @@ import { COO_CORE_CONTRACT } from "@/consts/contracts";
 
 export const useIsArbiter = (address: string | null, network: StacksNetworkName): UseQueryResult<boolean> => {
   return useQuery<boolean>({
-    queryKey: ["isArbiter", address],
+    queryKey: ["isArbiter", address, network],
     queryFn: async () => {
       if (!address) return false;
 
