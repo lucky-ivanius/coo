@@ -26,7 +26,7 @@ export const useCreateAssertion = () => {
 
       const sBtcTransferPostCond = Pc.principal(stxAddress!).willSendEq(args.bondSats).ft(getSbtcAddress(network), "sbtc-token");
 
-      const res = await request("stx_callContract", {
+      const res = await request({ forceWalletSelect: true }, "stx_callContract", {
         contract: COO_CORE_CONTRACT,
         functionName: "assert",
         network,
@@ -55,7 +55,7 @@ export const useSettleAssertion = (assertion: Assertion) => {
 
       const sBtcTransferPostCond = Pc.principal(COO_CORE_CONTRACT).willSendEq(assertion.bondSats).ft(getSbtcAddress(network), "sbtc-token");
 
-      const res = await request("stx_callContract", {
+      const res = await request({ forceWalletSelect: true }, "stx_callContract", {
         contract: COO_CORE_CONTRACT,
         functionName: "settle",
         network,
@@ -79,7 +79,7 @@ export const useDisputeAssertion = (assertion: Assertion) => {
 
       const sBtcTransferPostCond = Pc.principal(stxAddress!).willSendEq(assertion.bondSats).ft(getSbtcAddress(network), "sbtc-token");
 
-      const res = await request("stx_callContract", {
+      const res = await request({ forceWalletSelect: true }, "stx_callContract", {
         contract: COO_CORE_CONTRACT,
         functionName: "dispute",
         network,
@@ -114,7 +114,7 @@ export const useResolveAssertion = (assertion: Assertion) => {
         .willSendEq(assertion.bondSats * 2)
         .ft(getSbtcAddress(network), "sbtc-token");
 
-      const res = await request("stx_callContract", {
+      const res = await request({ forceWalletSelect: true }, "stx_callContract", {
         contract: COO_CORE_CONTRACT,
         functionName: "resolve",
         network,
