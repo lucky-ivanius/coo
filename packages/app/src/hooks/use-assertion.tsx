@@ -1,5 +1,5 @@
 import { request } from "@stacks/connect";
-import { bufferCV, noneCV, Pc, someCV, uintCV } from "@stacks/transactions";
+import { bufferCV, noneCV, Pc, postConditionToHex, someCV, uintCV } from "@stacks/transactions";
 import { useMutation } from "@tanstack/react-query";
 
 import type { Assertion } from "@coo/core";
@@ -8,7 +8,7 @@ import { COO_CORE_CONTRACT } from "@/consts/contracts";
 import { getSbtcAddress } from "@/lib/sbtc";
 
 import { useWallet } from "./use-wallet";
-import { hexToBytes } from "@stacks/common";
+import { hexToBytes, intToBigInt } from "@stacks/common";
 
 export type CreateAssertionArgs = {
   identifier: string;
@@ -24,7 +24,9 @@ export const useCreateAssertion = () => {
     mutationFn: async (args: CreateAssertionArgs) => {
       if (!connected) await connect();
 
-      const sBtcTransferPostCond = Pc.principal(stxAddress!).willSendEq(args.bondSats).ft(getSbtcAddress(network), "sbtc-token");
+      const sBtcTransferPostCond = postConditionToHex(
+        Pc.principal(stxAddress!).willSendEq(intToBigInt(args.bondSats)).ft(getSbtcAddress(network), "sbtc-token")
+      );
 
       const res = await request("stx_callContract", {
         contract: COO_CORE_CONTRACT,
@@ -53,7 +55,7 @@ export const useSettleAssertion = (assertion: Assertion) => {
     mutationFn: async () => {
       if (!connected) await connect();
 
-      const sBtcTransferPostCond = Pc.principal(COO_CORE_CONTRACT).willSendEq(assertion.bondSats).ft(getSbtcAddress(network), "sbtc-token");
+      const sBtcTransferPostCond = postConditionToHex(Pc.principal(COO_CORE_CONTRACT).willSendEq(assertion.bondSats).ft(getSbtcAddress(network), "sbtc-token"));
 
       const res = await request("stx_callContract", {
         contract: COO_CORE_CONTRACT,
@@ -77,7 +79,7 @@ export const useDisputeAssertion = (assertion: Assertion) => {
     mutationFn: async () => {
       if (!connected) await connect();
 
-      const sBtcTransferPostCond = Pc.principal(stxAddress!).willSendEq(assertion.bondSats).ft(getSbtcAddress(network), "sbtc-token");
+      const sBtcTransferPostCond = postConditionToHex(Pc.principal(stxAddress!).willSendEq(assertion.bondSats).ft(getSbtcAddress(network), "sbtc-token"));
 
       const res = await request("stx_callContract", {
         contract: COO_CORE_CONTRACT,
@@ -110,9 +112,11 @@ export const useResolveAssertion = (assertion: Assertion) => {
     mutationFn: async (result: ResolveResult) => {
       if (!connected) await connect();
 
-      const sBtcTransferPostCond = Pc.principal(COO_CORE_CONTRACT)
-        .willSendEq(assertion.bondSats * 2)
-        .ft(getSbtcAddress(network), "sbtc-token");
+      const sBtcTransferPostCond = postConditionToHex(
+        Pc.principal(COO_CORE_CONTRACT)
+          .willSendEq(assertion.bondSats * 2)
+          .ft(getSbtcAddress(network), "sbtc-token")
+      );
 
       const res = await request("stx_callContract", {
         contract: COO_CORE_CONTRACT,
