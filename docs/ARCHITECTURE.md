@@ -28,6 +28,10 @@ Every assertion is stored in `assertion-map`, keyed by a `(buff 32)` assertion I
 
 The full claim is **not** stored on-chain — only its `sha256` hash. The full claim is emitted as a `print` event at submission time for off-chain watchers.
 
+### Claim Type — `(buff 2048)`
+
+Claims are typed as `(buff 2048)` — a raw byte buffer of up to 2048 bytes. This is preferred over `(string-utf8 N)` because claims may contain arbitrary structured data (JSON, ABI-encoded bytes, URLs, hashes) not guaranteed to be valid UTF-8. Off-chain watchers read the emitted `claim` bytes and interpret them however the consuming protocol specifies — the contract doesn't parse the content.
+
 ### Arbiter Map
 
 A simple `principal → bool` allowlist. The contract owner (deployer) is the initial arbiter. New arbiters are added or removed via `add-arbiter` / `remove-arbiter`, both restricted to the contract owner.
@@ -37,6 +41,12 @@ A simple `principal → bool` allowlist. The contract owner (deployer) is the in
 ## Assertion ID Derivation
 
 The assertion ID is deterministic — derived from `sha256(identifier ++ claim ++ bond-sats ++ liveness ++ asserted-at-block)`. This makes every assertion content-addressable and prevents duplicate submissions for the same inputs at the same block.
+
+The `identifier` field is a `(buff 32)` value the asserter defines freely — an intent ID, a market ID, a data feed key, or any meaningful reference. It namespaces the assertion within the caller's protocol.
+
+Including `asserted-at-block` in the hash means the same claim with identical parameters can be re-submitted at a different block and produce a distinct assertion ID, allowing retries after rejection without parameter changes.
+
+`uint` fields (`bond-sats`, `liveness`, `asserted-at-block`) are converted to buffers using `to-consensus-buff?` before concatenation. `identifier` and `claim` are already `buff` types and pass directly into `concat`. Liveness is resolved to its concrete value (`default-to DEFAULT_LIVENESS liveness`) before derivation so the hash is deterministic.
 
 ---
 
@@ -88,6 +98,25 @@ Contract owner manages the arbiter allowlist.
 | `is-window-open(expiry)` | `true` if `expiry ≥ stacks-block-height` |
 | `is-window-closed(expiry)` | `true` if `stacks-block-height > expiry` |
 | `is-arbiter(address)` | `(some true)` or `none` |
+
+---
+
+## sBTC Transfer Patterns
+
+Bond transfers use two distinct Clarity 4 patterns depending on direction:
+
+| Direction | Pattern | Used in |
+|---|---|---|
+| User → Contract (post bond) | `restrict-assets?` + `with-ft` | `assert()`, `dispute()` |
+| Contract → User (payout) | `contract-call?` with `current-contract` as sender | `settle()`, `resolve()` |
+
+When the user (contract-caller) is spending tokens — posting a bond — use `restrict-assets?` with `with-ft`. Settlement payouts use `contract-call?` directly since the contract holds the bonds and transfers them out.
+
+---
+
+## Authorization — `contract-caller`
+
+COO uses `contract-caller` (not `tx-sender`) throughout for storing the asserter/disputer identity and for access control. `contract-caller` returns the immediate caller of the current function, while `tx-sender` always returns the original wallet that signed the transaction. Using `tx-sender` for authorization checks creates a phishing risk: a malicious contract could call COO functions on behalf of an admin since `tx-sender` persists as the original signer throughout the entire call chain.
 
 ---
 

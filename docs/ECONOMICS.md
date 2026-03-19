@@ -42,6 +42,12 @@ settle (no dispute):  contract → asserter   (1× bond-sats)
 
 ---
 
+## Why It Works
+
+The protocol doesn't need *everyone* to be honest — it only needs *one* honest disputer. This is a much weaker and more realistic assumption. Because lying costs the asserter their entire bond, rational actors don't lie. And because the minimum bond floor guarantees a meaningful reward, rational watchers are incentivized to dispute false claims.
+
+---
+
 ## Bond Volatility
 
 Bonds are denominated in sats, so their USD value fluctuates with BTC price. This is a known limitation in V1.
