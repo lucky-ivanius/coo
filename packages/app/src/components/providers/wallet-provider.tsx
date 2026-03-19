@@ -43,6 +43,7 @@ export function WalletProvider({ network = "testnet", children }: PropsWithChild
       setConnected(true);
       setStxAddress(data?.addresses.stx[0]?.address ?? null);
     } catch (e) {
+      console.error(e);
       const message = e instanceof Error ? e.message.trim() : "Unknown error";
 
       if (message === "User rejected request") {

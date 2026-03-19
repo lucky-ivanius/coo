@@ -67,6 +67,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
         position: "top-center",
       });
     } catch (e) {
+      console.error(e);
       const message = e instanceof Error ? e.message.trim() : "Unknown error";
 
       if (message === "User rejected request") {
@@ -102,6 +103,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
         position: "top-center",
       });
     } catch (e) {
+      console.error(e);
       const message = e instanceof Error ? e.message.trim() : "Unknown error";
 
       if (message === "User rejected request") {
@@ -137,6 +139,7 @@ export function AssertionCard({ assertion, currentBlock }: AssertionCardProps) {
         position: "top-center",
       });
     } catch (e) {
+      console.error(e);
       const message = e instanceof Error ? e.message.trim() : "Unknown error";
 
       if (message === "User rejected request") {

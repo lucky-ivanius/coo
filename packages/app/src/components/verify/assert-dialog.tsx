@@ -84,6 +84,7 @@ export function AssertDialog({ open, onOpenChange }: AssertDialogProps) {
       form.reset();
       onOpenChange(false);
     } catch (e) {
+      console.error(e);
       const message = e instanceof Error ? e.message.trim() : "Unknown error";
 
       if (message === "User rejected request") {
