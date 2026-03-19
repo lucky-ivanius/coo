@@ -1,6 +1,5 @@
 import { request } from "@stacks/connect";
-import Cl from "@stacks/transactions/dist/cl";
-import Pc from "@stacks/transactions/dist/pc";
+import { Cl, Pc } from "@stacks/transactions/dist";
 import { useMutation } from "@tanstack/react-query";
 
 import type { Assertion } from "@coo/core";
