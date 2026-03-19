@@ -1,5 +1,5 @@
 import { request } from "@stacks/connect";
-import { Cl, Pc } from "@stacks/transactions";
+import { bufferCV, noneCV, Pc, someCV, uintCV } from "@stacks/transactions";
 import { useMutation } from "@tanstack/react-query";
 
 import type { Assertion } from "@coo/core";
@@ -8,6 +8,7 @@ import { COO_CORE_CONTRACT } from "@/consts/contracts";
 import { getSbtcAddress } from "@/lib/sbtc";
 
 import { useWallet } from "./use-wallet";
+import { hexToBytes } from "@stacks/common";
 
 export type CreateAssertionArgs = {
   identifier: string;
@@ -30,10 +31,10 @@ export const useCreateAssertion = () => {
         functionName: "assert",
         network,
         functionArgs: [
-          Cl.bufferFromHex(args.identifier),
-          Cl.bufferFromHex(args.claim),
-          Cl.uint(args.bondSats),
-          args.liveness !== null ? Cl.some(Cl.uint(args.liveness)) : Cl.none(),
+          bufferCV(hexToBytes(args.identifier)),
+          bufferCV(hexToBytes(args.claim)),
+          uintCV(args.bondSats),
+          args.liveness !== null ? someCV(uintCV(args.liveness)) : noneCV(),
         ],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
@@ -58,7 +59,7 @@ export const useSettleAssertion = (assertion: Assertion) => {
         contract: COO_CORE_CONTRACT,
         functionName: "settle",
         network,
-        functionArgs: [Cl.bufferFromHex(assertion.id)],
+        functionArgs: [bufferCV(hexToBytes(assertion.id))],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,
@@ -82,7 +83,7 @@ export const useDisputeAssertion = (assertion: Assertion) => {
         contract: COO_CORE_CONTRACT,
         functionName: "dispute",
         network,
-        functionArgs: [Cl.bufferFromHex(assertion.id)],
+        functionArgs: [bufferCV(hexToBytes(assertion.id))],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,
@@ -117,7 +118,7 @@ export const useResolveAssertion = (assertion: Assertion) => {
         contract: COO_CORE_CONTRACT,
         functionName: "resolve",
         network,
-        functionArgs: [Cl.bufferFromHex(assertion.id), Cl.uint(resolveResultMap[result])],
+        functionArgs: [bufferCV(hexToBytes(assertion.id)), uintCV(resolveResultMap[result])],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,
