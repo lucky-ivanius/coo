@@ -22,8 +22,8 @@
   "d1_databases": [
     {
       "binding": "COO_DB",
-      "database_name": "coo-dev",
-      "database_id": "d49b8d1c-cea5-4571-810f-61196f213c87",
+      "database_name": "coo-testnet",
+      "database_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
       "migrations_dir": ".migrations"
     }
   ],
@@ -32,6 +32,6 @@
   // },
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
+    "head_sampling_rate": 0.1
   }
 }

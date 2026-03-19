@@ -36,7 +36,7 @@ plan:
     transactions:
     - transaction-type: contract-publish
       contract-name: coo-core
-      expected-sender: ST121DJYQKMD4EA2RNRPARWC14VEPPGXTKH2KA99V
+      expected-sender: ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE
       cost: 116480
       path: contracts/core.clar
       anchor-block-only: true
