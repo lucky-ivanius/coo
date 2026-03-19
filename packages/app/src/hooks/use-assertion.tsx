@@ -1,5 +1,6 @@
 import { request } from "@stacks/connect";
-import { Cl, Pc } from "@stacks/transactions";
+import Cl from "@stacks/transactions/dist/cl";
+import Pc from "@stacks/transactions/dist/pc";
 import { useMutation } from "@tanstack/react-query";
 
 import type { Assertion } from "@coo/core";
@@ -30,8 +31,8 @@ export const useCreateAssertion = () => {
         functionName: "assert",
         network,
         functionArgs: [
-          Cl.buffer(Buffer.from(args.identifier, "hex")),
-          Cl.buffer(Buffer.from(args.claim, "hex")),
+          Cl.bufferFromHex(args.identifier),
+          Cl.bufferFromHex(args.claim),
           Cl.uint(args.bondSats),
           args.liveness !== null ? Cl.some(Cl.uint(args.liveness)) : Cl.none(),
         ],
@@ -58,7 +59,7 @@ export const useSettleAssertion = (assertion: Assertion) => {
         contract: COO_CORE_CONTRACT,
         functionName: "settle",
         network,
-        functionArgs: [Cl.buffer(Buffer.from(assertion.id, "hex"))],
+        functionArgs: [Cl.bufferFromHex(assertion.id)],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,
@@ -82,7 +83,7 @@ export const useDisputeAssertion = (assertion: Assertion) => {
         contract: COO_CORE_CONTRACT,
         functionName: "dispute",
         network,
-        functionArgs: [Cl.buffer(Buffer.from(assertion.id, "hex"))],
+        functionArgs: [Cl.bufferFromHex(assertion.id)],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,
@@ -117,7 +118,7 @@ export const useResolveAssertion = (assertion: Assertion) => {
         contract: COO_CORE_CONTRACT,
         functionName: "resolve",
         network,
-        functionArgs: [Cl.buffer(Buffer.from(assertion.id, "hex")), Cl.uint(resolveResultMap[result])],
+        functionArgs: [Cl.bufferFromHex(assertion.id), Cl.uint(resolveResultMap[result])],
         postConditions: [sBtcTransferPostCond],
         postConditionMode: "deny",
         sponsored: false,
