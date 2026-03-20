@@ -1,7 +1,6 @@
 import type { StacksNetworkName } from "@stacks/network";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { ClarityType, fetchCallReadOnlyFunction } from "@stacks/transactions";
-import Cl from "@stacks/transactions/dist/cl";
+import { ClarityType, fetchCallReadOnlyFunction, Cl } from "@stacks/transactions";
 import { useQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 
