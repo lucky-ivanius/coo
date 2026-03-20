@@ -18,6 +18,17 @@ export function AssertionList({ initialAssertions }: AssertionListProps) {
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [assertions, setAssertions] = useState<Assertion[]>(initialAssertions);
 
+  useEffect(() => {
+    if (initialAssertions.length > 0) {
+      setAssertions((prev) => {
+        const existingIds = new Set(prev.map((a) => a.id));
+        const newAssertions = initialAssertions.filter((a) => !existingIds.has(a.id));
+        if (newAssertions.length === 0) return prev;
+        return [...prev, ...newAssertions];
+      });
+    }
+  }, [initialAssertions]);
+
   const { subscribe: subscribeBlock, unsubscribe: unsubscribeBlock, connected: blockSubscriberConnected } = useSubscribeBlock();
   const {
     subscribe: subscribeAssertionEvent,
