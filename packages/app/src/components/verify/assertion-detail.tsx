@@ -107,7 +107,7 @@ export function AssertionDetail({ assertion, currentBlock, blocksLeft }: Asserti
           </MetaRow>
         )}
 
-        {assertion.disputer && assertion.status === "disputed" && assertion.disputedAtBlock && assertion.disputedTxId && (
+        {assertion.disputer && assertion.disputedAtBlock && assertion.disputedTxId && (
           <>
             <MetaRow icon={UserIcon} label="Disputer" iconClassName="size-5 shrink-0 text-yellow-600 dark:text-yellow-500">
               <p className="cursor-default break-all font-mono text-sm" title={assertion.disputer}>
