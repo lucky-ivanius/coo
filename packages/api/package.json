@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@coo/core": "workspace:*",
+    "@coo/sdk": "workspace:*",
     "@hirosystems/chainhooks-client": "2.1.1",
+    "@hono/typebox-validator": "1.1.0",
     "@hono/zod-validator": "0.7.6",
+    "@stacks/common": "7.3.1",
     "@stacks/transactions": "7.3.1",
     "drizzle-orm": "0.45.1",
     "hono": "4.12.8",
