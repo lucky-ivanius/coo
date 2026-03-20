@@ -1,13 +1,26 @@
 import { request } from "@stacks/connect";
-import { Pc, Cl } from "@stacks/transactions";
-import { useMutation } from "@tanstack/react-query";
+import { Cl, Pc } from "@stacks/transactions";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import type { Assertion } from "@coo/core";
 
 import { COO_CORE_CONTRACT } from "@/consts/contracts";
 import { getSbtcAddress } from "@/lib/sbtc";
 
+import { API_BASE_URL } from "@/consts/api";
 import { useWallet } from "./use-wallet";
+
+export const useGetAssertions = () => {
+  return useQuery<Assertion[]>({
+    queryKey: ["assertions"],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/assertions`);
+      if (!res.ok) throw new Error("Failed to fetch assertions");
+
+      return await res.json();
+    },
+  });
+};
 
 export type CreateAssertionArgs = {
   identifier: string;
