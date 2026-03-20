@@ -19,6 +19,8 @@ export const useGetAssertions = () => {
 
       return await res.json();
     },
+    enabled: true,
+    refetchOnWindowFocus: false,
   });
 };
 

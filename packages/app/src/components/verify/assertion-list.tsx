@@ -14,7 +14,7 @@ export interface AssertionListProps {
   initialAssertions: Assertion[];
 }
 
-export function AssertionList({ initialAssertions = [] }: AssertionListProps) {
+export function AssertionList({ initialAssertions }: AssertionListProps) {
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [assertions, setAssertions] = useState<Assertion[]>(initialAssertions);
 
