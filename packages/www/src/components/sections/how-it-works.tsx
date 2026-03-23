@@ -22,7 +22,7 @@ const steps = [
   {
     num: "03",
     title: "Dispute",
-    body: "Anyone who knows the truth can challenge the statement. The protocol only needs one honest person — anywhere in the world — to catch a lie.",
+    body: "Anyone who knows the truth can challenge the statement. The protocol only needs one honest person to catch a lie.",
     icon: Alert02Icon,
   },
   {
@@ -119,7 +119,7 @@ export function HowItWorks() {
                   </div>
                   <span
                     className={cn(
-                      "absolute -top-2 -right-2 font-mono text-[10px] font-bold px-1 py-0.5 rounded-sm transition-all duration-500",
+                      "absolute -top-1 -right-1 font-mono text-[10px] font-bold px-1 py-0.5 rounded-sm transition-all duration-500",
                       active >= i ? "bg-primary text-primary-foreground" : "bg-border text-muted-foreground"
                     )}
                   >
