@@ -5,7 +5,7 @@ description: Latest updates and milestones.
 # What's New
 
 {% updates format="full" %}
-{% update date="2025-03-25" %}
+{% update date="2025-03-20" %}
 ## Testnet Launch
 
 Clarity Optimistic Oracle is live on Stacks testnet.
