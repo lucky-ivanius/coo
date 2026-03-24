@@ -1,0 +1,521 @@
+# Clarity Optimistic Oracle
+
+> A permissionless assertion protocol on Stacks, secured by Bitcoin.
+
+Any contract or user can assert a verifiable claim by staking an sBTC bond. If nobody disputes it within a liveness window, the claim becomes on-chain truth. If someone disputes, an arbiter decides — and the liar loses their bond.
+
+Any protocol on Stacks can plug in.
+
+## Quick Links
+
+- [How It Works](overview/how-it-works.md): The assert-dispute-settle lifecycle
+- [Use Cases](overview/use-cases.md): What you can build with it
+- [Architecture](developers/architecture.md): Contract internals
+- [Contract Reference](developers/contract-reference.md): Functions, events, error codes
+
+---
+
+# How It Works
+
+Every claim follows the same lifecycle: **Assert, Dispute, Settle**.
+
+### Assert
+
+Anyone submits a claim with an sBTC bond. The full claim is emitted on-chain as an event for watchers.
+
+The claim enters an **open** state with a liveness window (default: ~2 hours).
+
+### Dispute
+
+Within the liveness window, any watcher can challenge the claim by posting a matching sBTC bond. Both bonds are locked and the claim moves to a **disputed** state.
+
+If nobody disputes, skip to the next step.
+
+### Settle
+
+**No dispute** — After the liveness window expires, anyone can settle the claim. The asserter's bond is returned.
+
+**Disputed** — An arbiter resolves the dispute with one of three outcomes:
+
+| Outcome | What happens |
+| --- | --- |
+| Asserter was right | Asserter gets both bonds |
+| Disputer was right | Disputer gets both bonds |
+| Unclear | Both parties get their own bond back |
+
+All outcomes are terminal. Once settled, rejected, or marked unresolved, the claim is final.
+
+## State Flow
+
+```
+OPEN → SETTLED                  (no dispute, liveness expired)
+     → DISPUTED → SETTLED       (arbiter rules for asserter)
+                → REJECTED      (arbiter rules for disputer)
+                → UNRESOLVED    (arbiter can't determine truth)
+```
+
+For the full bond payouts in each scenario, see Economics.
+
+---
+
+# Use Cases
+
+Clarity Optimistic Oracle is infrastructure. Any protocol on Stacks can use it as a source of truth for verifiable claims.
+
+## Prediction Markets
+
+Resolve real-world outcomes on-chain — elections, sports, milestones — without a single point of failure.
+
+> "The Kansas City Chiefs beat the Philadelphia Eagles in Super Bowl LVII"
+
+## DeFi
+
+Settle any condition — price thresholds, liquidation events, option expirations — using general-purpose data instead of narrow price feeds.
+
+> "BTC/USD was below $55,000 at 00:00 UTC on March 15, 2024 per Coinbase Pro OHLCV"
+
+## Cross-Chain Verification
+
+Verify that a transaction on Bitcoin, Ethereum, or Solana actually happened, without trusting a centralized relayer.
+
+> "Address 0xA1b2...F3d4 sent 1.0 ETH on Ethereum mainnet at block 19,204,811"
+
+## Insurance and Risk
+
+Trigger payouts based on verified real-world events: flight delays, weather data, protocol exploits.
+
+> "Singapore Airlines flight SQ321 was delayed more than 3 hours on March 12, 2024"
+
+## Real-World Assets
+
+Verify off-chain valuations, ownership transfers, or compliance checks for tokenized yields.
+
+> "U.S. Treasury 6-month T-bill yield was 5.27% at auction on March 11, 2024"
+
+To integrate any of these into your protocol, see Integration.
+
+---
+
+# Economics
+
+All bonds are denominated in sBTC (satoshis) — Bitcoin-native collateral that gives every claim real economic weight.
+
+## Bond Rules
+
+- Minimum bond: **10,000 sats** (enforced on-chain at assertion time)
+- Disputers must post a **matching** bond
+- Bonds are locked until the claim reaches a terminal state
+
+The minimum floor ensures disputes are always economically rational — a disputer knows the minimum reward is worth the cost of challenging.
+
+## Outcomes
+
+| Scenario | Asserter | Disputer |
+| --- | --- | --- |
+| Honest claim, no dispute | Bond returned | — |
+| Honest claim, wrongly disputed | Gets both bonds (2x) | Loses bond |
+| Dishonest claim, caught | Loses bond | Gets both bonds (2x) |
+| Disputed, unclear outcome | Bond returned | Bond returned |
+
+The **unclear** outcome is a safety valve. When an arbiter cannot determine truth, both parties recover their bonds. Neither side is punished for an ambiguous claim.
+
+## Bond Flow
+
+```
+Assert:     asserter → contract    (bond locked)
+Dispute:    disputer → contract    (matching bond locked)
+
+Settled:    contract → asserter    (2x bond)
+Rejected:   contract → disputer    (2x bond)
+Unresolved: contract → asserter    (1x bond)
+            contract → disputer    (1x bond)
+
+No dispute: contract → asserter    (1x bond returned)
+```
+
+## Why It Works
+
+The protocol doesn't need everyone to be honest. It needs **one** honest watcher to catch a lie. Lying costs the asserter their entire bond. The minimum bond floor guarantees a meaningful reward for watchers. Rational actors don't lie, and rational watchers dispute false claims.
+
+## Known Limitations
+
+Bonds are denominated in sats, so their USD value fluctuates with BTC price. This is a known trade-off in the current version.
+
+---
+
+# Roadmap
+
+## Decentralized Arbitration
+
+Move from a controlled arbiter allowlist to fully decentralized resolution through token-weighted voting. Anyone holding the governance token can participate in dispute resolution.
+
+## Automatic Payouts
+
+When a claim is settled, downstream actions fire automatically — insurance pays out, bridges release funds, prediction markets resolve. No manual intervention.
+
+## Custom Resolution Rules
+
+Every protocol has different requirements. Clarity Optimistic Oracle will support pluggable resolution strategies — faster windows, stricter thresholds, or entirely custom logic per use case.
+
+## Protocol Fees
+
+A small fee on each assertion creates a sustainable revenue stream that scales with adoption across the ecosystem.
+
+## Ecosystem Standard
+
+The long-term goal: be the default truth layer for every bridge, prediction market, insurance protocol, and DeFi app on Stacks.
+
+---
+
+# Architecture
+
+Clarity Optimistic Oracle (v1) is a single Clarity contract (`core.clar`) that manages the full assertion lifecycle.
+
+## Data Model
+
+### Assertion Map
+
+Every assertion is stored in `assertion-map`, keyed by a `(buff 32)` assertion ID.
+
+```clarity
+{
+  asserter:            principal,
+  disputer:            (optional principal),
+  claim-hash:          (buff 32),
+  bond-sats:           uint,
+  liveness:            uint,
+  status:              uint,
+  asserted-at-block:   uint,
+  disputed-at-block:   (optional uint),
+  settled-at-block:    (optional uint),
+  rejected-at-block:   (optional uint),
+  unresolved-at-block: (optional uint),
+}
+```
+
+The full claim is **not** stored on-chain — only its `sha256` hash. The full claim is emitted as a `print` event at assertion time for off-chain indexers.
+
+### Claim Type
+
+Claims are typed as `(buff 2048)` — a raw byte buffer up to 2,048 bytes. This is used instead of `(string-utf8)` because claims may contain arbitrary structured data (JSON, encoded bytes, URLs, hashes) that isn't guaranteed to be valid UTF-8. Consuming protocols define how to interpret the bytes.
+
+### Arbiter Map
+
+A `principal → bool` allowlist. The contract deployer is the initial arbiter. Managed via `add-arbiter` / `remove-arbiter`, restricted to the contract owner.
+
+## Assertion ID
+
+The assertion ID is deterministic:
+
+```
+sha256(identifier ++ claim ++ bond-sats ++ liveness ++ asserted-at-block)
+```
+
+- **`identifier`** — A `(buff 32)` value defined by the asserter. Use it as a market ID, data feed key, or any meaningful reference to namespace assertions within your protocol.
+- **`asserted-at-block`** — Including the block height means the same claim can be re-submitted at a different block and produce a distinct ID. This allows retries after rejection without changing parameters.
+
+`uint` fields are converted to buffers via `to-consensus-buff?` before hashing. Liveness is resolved to its concrete value before derivation so the hash is always deterministic.
+
+## Protocol Parameters
+
+| Parameter | Value | Description |
+| --- | --- | --- |
+| `DEFAULT_LIVENESS` | 1,440 blocks | ~2 hours at ~5s/block |
+| `MIN_LIVENESS` | 1 block | Floor for custom liveness |
+| `MIN_BOND_SATS` | 10,000 sats | Minimum sBTC bond |
+
+## sBTC Transfer Patterns
+
+Bond transfers use two Clarity patterns depending on direction:
+
+| Direction | Pattern | Used in |
+| --- | --- | --- |
+| User → Contract (post bond) | `restrict-assets?` + `with-ft` | `assert`, `dispute` |
+| Contract → User (payout) | `contract-call?` with `current-contract` as sender | `settle`, `resolve` |
+
+For the full list of functions, events, and error codes, see Contract Reference.
+
+---
+
+# Contract Reference
+
+## Public Functions
+
+### `assert`
+
+Submits a new assertion. Transfers `bond-sats` of sBTC from the caller to the contract. Liveness defaults to `DEFAULT_LIVENESS` if not provided.
+
+### `settle`
+
+Settles an open assertion after its liveness window expires with no dispute. Returns the sBTC bond to the asserter. Can be called by anyone.
+
+### `dispute`
+
+Challenges an open assertion within its liveness window. The disputer posts a matching sBTC bond. Both bonds are locked and the assertion moves to `DISPUTED`.
+
+### `resolve`
+
+Resolves a disputed assertion. Restricted to whitelisted arbiters. Three outcomes:
+
+- **Settled** — Asserter was right. Asserter receives both bonds.
+- **Rejected** — Disputer was right. Disputer receives both bonds.
+- **Unresolved** — No clear answer. Each party gets their own bond back.
+
+### `add-arbiter` / `remove-arbiter`
+
+Contract owner manages the arbiter allowlist.
+
+## Read-Only Functions
+
+| Function | Returns |
+| --- | --- |
+| `get-assertion(id)` | Full assertion tuple or `none` |
+| `get-default-liveness` | `DEFAULT_LIVENESS` constant |
+| `get-min-bond-sats` | `MIN_BOND_SATS` constant |
+| `is-window-open(expiry)` | `true` if `expiry >= stacks-block-height` |
+| `is-window-closed(expiry)` | `true` if `stacks-block-height > expiry` |
+| `is-arbiter(address)` | `(some true)` or `none` |
+
+## Events
+
+All state transitions emit `print` events for off-chain indexing:
+
+| Event | Emitted by |
+| --- | --- |
+| `asserted` | `assert` — includes full `claim` body |
+| `settled` | `settle` or `resolve` (settled path) |
+| `disputed` | `dispute` |
+| `rejected` | `resolve` (rejected path) |
+| `unresolved` | `resolve` (unresolved path) |
+| `arbiter-added` | `add-arbiter` |
+| `arbiter-removed` | `remove-arbiter` |
+
+## Error Codes
+
+Errors follow an HTTP-inspired numbering scheme:
+
+| Code | Constant | Meaning |
+| --- | --- | --- |
+| `u8400001` | `ERR_WINDOW_OPEN` | Liveness window still open (cannot settle) |
+| `u8400002` | `ERR_WINDOW_CLOSED` | Liveness window already closed (cannot dispute) |
+| `u8400003` | `ERR_INVALID_STATUS` | Assertion not in the required status |
+| `u8400004` | `ERR_TRANSFER_FAILED` | sBTC transfer failed |
+| `u8400100` | `ERR_ASSERTION_BOND_TOO_LOW` | Bond below `MIN_BOND_SATS` |
+| `u8400101` | `ERR_ASSERTION_INVALID_LIVENESS` | Liveness below `MIN_LIVENESS` |
+| `u8403000` | `ERR_NOT_CONTRACT_OWNER` | Caller is not the contract owner |
+| `u8403200` | `ERR_NOT_ARBITER` | Caller is not a whitelisted arbiter |
+| `u8404100` | `ERR_ASSERTION_NOT_FOUND` | Assertion ID not in registry |
+| `u8404200` | `ERR_ARBITER_NOT_FOUND` | Address not in arbiter allowlist |
+| `u8409100` | `ERR_ASSERTION_ALREADY_EXISTS` | Assertion ID already registered |
+| `u8409200` | `ERR_ARBITER_ALREADY_EXISTS` | Address already an arbiter |
+| `u8500000` | `ERR_SERIALIZATION_FAILED` | Internal serialization error |
+
+---
+
+# Integration
+
+Clarity Optimistic Oracle is designed to be called from other Clarity contracts. Any protocol on Stacks can use it as a source of truth.
+
+## Basic Flow
+
+### 1. Submit assertions
+
+Call `assert` with an identifier, claim, bond amount, and optional liveness window.
+
+### 2. Check results
+
+Call `get-assertion` to read the current status of any assertion by its ID.
+
+### 3. React to outcomes
+
+Use the assertion status to trigger downstream logic in your protocol (payouts, state changes, etc.).
+
+## Identifier
+
+The `identifier` field (`buff 32`) is yours to define. Use it to namespace assertions within your protocol — a market ID, a data feed key, a request ID, or any meaningful reference.
+
+## Claim Format
+
+Claims are `(buff 2048)`. Your protocol defines the encoding and interpretation. Common approaches:
+
+- UTF-8 encoded human-readable strings
+- JSON-encoded structured data
+- Application-specific binary formats
+
+Off-chain watchers read the emitted `claim` from the `asserted` event and interpret it per your protocol's specification.
+
+---
+
+# Deployed Contracts
+
+| Network | Contract |
+| --- | --- |
+| Testnet | `ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE.coo-core` |
+| Mainnet | — |
+
+For function signatures and error codes, see Contract Reference.
+
+---
+
+# Asserting Claims
+
+To assert a claim, call `assert` with:
+
+- **`identifier`** — A `(buff 32)` value that namespaces your claim (e.g., a market ID or request ID)
+- **`claim`** — The claim data as `(buff 2048)`. Emitted on-chain for watchers.
+- **`bond-sats`** — sBTC bond amount in satoshis. Minimum: 10,000 sats.
+- **`liveness`** — Optional. Custom dispute window in blocks. Defaults to 1,440 blocks (~2 hours).
+
+The contract transfers your sBTC bond, stores the claim hash, and emits the full claim as an event.
+
+Your assertion enters the **open** state. From here:
+
+- **No dispute** — After the liveness window expires, anyone can call `settle` to return your bond. See Settling and Resolving.
+- **Disputed** — A disputer posts a matching bond and the claim moves to **disputed**. See Disputing Claims.
+
+## What Makes a Good Claim
+
+Claims should be specific and verifiable. Include enough detail that any third party can independently determine if the claim is true or false.
+
+Good: `"BTC/USD was below $55,000 at 00:00 UTC on March 15, 2024 per Coinbase Pro OHLCV"`
+
+Bad: `"BTC price was low in March 2024"`
+
+---
+
+# Disputing Claims
+
+If you believe an assertion is false, call `dispute` with the assertion ID.
+
+You must post a matching sBTC bond — the same amount the asserter staked.
+
+## Requirements
+
+- The assertion must be in the **open** state
+- The liveness window must still be active
+- You must have enough sBTC to match the bond
+
+## What Happens Next
+
+Both bonds (yours and the asserter's) are locked. The assertion moves to the **disputed** state.
+
+An arbiter will review and resolve the dispute:
+
+| Outcome | You (disputer) | Asserter |
+| --- | --- | --- |
+| You were right | Get both bonds | Loses bond |
+| Asserter was right | Lose bond | Gets both bonds |
+| Unclear | Bond returned | Bond returned |
+
+See Settling and Resolving for how resolution works.
+
+## When to Dispute
+
+Only dispute claims you can prove are false. Disputing a true claim costs you your entire bond. The economics are designed so that honest behavior is always the rational choice.
+
+---
+
+# Settling and Resolving
+
+Claims reach a final state through two paths depending on whether they were disputed.
+
+## Settling (No Dispute)
+
+If the liveness window expires without a dispute, anyone can call `settle` to finalize the assertion. The asserter's bond is returned.
+
+This is the expected path for honest claims — assert, wait, get your bond back.
+
+## Resolving (After Dispute)
+
+When a claim is disputed, an arbiter calls `resolve` with one of three outcomes:
+
+### Settled
+
+The asserter was right. Asserter receives both bonds.
+
+### Rejected
+
+The disputer was right. Disputer receives both bonds.
+
+### Unresolved
+
+The arbiter can't determine truth. Both parties get their own bond back.
+
+## Terminal States
+
+All three outcomes (`SETTLED`, `REJECTED`, `UNRESOLVED`) are final. Once a claim reaches a terminal state, no further action can be taken on it.
+
+For the full breakdown of bond payouts, see Economics.
+
+---
+
+# FAQs
+
+## What is an optimistic oracle?
+
+An optimistic oracle assumes every claim is true by default. Instead of verifying upfront, the system accepts claims and gives anyone the chance to dispute. If a claim is false, the liar loses real money.
+
+## Why sBTC?
+
+All bonds are denominated in sBTC — Bitcoin-native collateral on Stacks. This gives every claim real economic weight backed by BTC.
+
+## What happens if nobody disputes a claim?
+
+The claim becomes accepted truth after the liveness window expires. The asserter gets their bond back. See How It Works.
+
+## What happens if someone disputes?
+
+Both the asserter and disputer have bonds locked. An arbiter reviews the dispute and decides who was right. The winner takes both bonds. If the outcome is unclear, both parties get their bonds back. See Economics for the full payout breakdown.
+
+## Can anyone be an arbiter?
+
+Currently, arbiters are managed through an allowlist controlled by the contract owner. The Roadmap includes plans for decentralized resolution through token-weighted voting.
+
+## What's the minimum bond?
+
+10,000 sats ≈ 0.0001 sBTC. This floor ensures disputes are always economically worthwhile.
+
+## How long is the dispute window?
+
+The default liveness window is 1,440 blocks (~2 hours at ~5 seconds per block). Asserters can set a custom window, with a minimum of 1 block.
+
+## Can I use this in my protocol?
+
+Yes. Clarity Optimistic Oracle is designed as infrastructure — any contract on Stacks can call into it. See Integration.
+
+---
+
+# What's New
+
+## Testnet Launch — March 20, 2025
+
+Clarity Optimistic Oracle is live on Stacks testnet.
+
+Contract: `ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE.coo-core`
+
+You can:
+
+- Assert claims backed by sBTC bonds
+- Dispute claims within the liveness window
+- Resolve disputes through arbiter settlement
+
+Try it out at https://coo-app-blond.vercel.app/
+
+---
+
+# Resources
+
+## Deployed Contracts
+
+| Network | Contract |
+| --- | --- |
+| Testnet | `ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE.coo-core` |
+| Mainnet | — |
+
+## Links
+
+| Resource | URL |
+| --- | --- |
+| Website | https://coo-theta.vercel.app/ |
+| App | https://coo-app-blond.vercel.app/ |
+| GitHub | https://github.com/lucky-ivanius/coo |

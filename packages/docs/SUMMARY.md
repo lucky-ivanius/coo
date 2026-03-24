@@ -27,3 +27,7 @@
 ## Resources
 
 * [Links and Contracts](resources.md)
+
+## LLM
+* [llms.txt](llms.txt)
+* [llms-full.txt](llms-full.txt)
