@@ -1,0 +1,41 @@
+# Clarity Optimistic Oracle
+
+> A permissionless assertion protocol on Stacks, secured by Bitcoin.
+
+Any contract or user can assert a verifiable claim by staking an sBTC bond. If nobody disputes it within a liveness window, the claim becomes on-chain truth. If someone disputes, an arbiter decides — and the liar loses their bond.
+
+## Overview
+
+- [How It Works](overview/how-it-works.md): The assert-dispute-settle lifecycle
+- [Use Cases](overview/use-cases.md): Prediction markets, DeFi, cross-chain verification, insurance, real-world assets
+- [Economics](overview/economics.md): sBTC bonds and payout mechanics
+- [Roadmap](overview/roadmap.md): Decentralized arbitration, automatic payouts, custom resolution rules
+
+## Developers
+
+- [Architecture](developers/architecture.md): Data model, ID derivation, and contract internals
+- [Contract Reference](developers/contract-reference.md): Public functions, read-only functions, events, and error codes
+- [Integration](developers/integration.md): How to use the oracle in your Clarity contract
+- [Deployed Contracts](developers/deployed-contracts.md): Testnet and mainnet addresses
+
+## Using Clarity Optimistic Oracle
+
+- [Asserting Claims](using/asserting.md): Submit a claim backed by an sBTC bond
+- [Disputing Claims](using/disputing.md): Challenge a claim you believe is false
+- [Settling and Resolving](using/settling.md): How claims reach their final state
+
+## Resources
+
+- [FAQs](faq.md): Frequently asked questions
+- [What's New](whats-new.md): Latest updates and milestones
+- [Links and Contracts](resources.md): Website, app, GitHub, deployed contracts
+
+## Quick Facts
+
+- Contract: Single Clarity contract (`core.clar`)
+- Bonds: Denominated in sBTC (satoshis), minimum 10,000 sats
+- Default liveness window: 1,440 blocks (~2 hours)
+- Testnet contract: `ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE.coo-core`
+- Website: https://coo-theta.vercel.app/
+- App: https://coo-app-blond.vercel.app/
+- GitHub: https://github.com/lucky-ivanius/coo
