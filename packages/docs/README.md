@@ -2,7 +2,7 @@
 description: A permissionless assertion protocol on Stacks, secured by Bitcoin.
 ---
 
-# Welcome
+# Welcome to Clarity Optimistic Oracle (COO)
 
 Clarity Optimistic Oracle is a general-purpose, permissionless assertion protocol built in Clarity for the Stacks blockchain.
 
