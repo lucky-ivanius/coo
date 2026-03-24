@@ -1,6 +1,6 @@
 # Summary
 
-* [Welcome to COO](README.md)
+* [Welcome to Clarity Optimistic Oracle](README.md)
 * [What's New](whats-new.md)
 * [FAQs](faq.md)
 
