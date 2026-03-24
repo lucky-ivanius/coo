@@ -8,8 +8,8 @@ description: Links, deployed contracts, and references.
 
 | Network | Contract |
 | --- | --- |
-| Testnet | `ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE.coo-core` |
 | Mainnet | — |
+| Testnet | `ST22FX8S1R9K6VS5E9KK53YY0DFWG5CCWDYDFDVRE.coo-core` |
 
 ## Links
 
