@@ -1,48 +1,16 @@
 ---
-description: A permissionless optimistic oracle on Stacks, secured by sBTC bonds.
-layout:
-  width: default
-  title:
-    visible: true
-  description:
-    visible: true
-  tableOfContents:
-    visible: true
-  outline:
-    visible: true
-  pagination:
-    visible: true
+description: A permissionless assertion protocol on Stacks, secured by Bitcoin.
 ---
 
-# COO
+# Welcome
 
-COO (Clarity Optimistic Oracle) is a single Clarity smart contract that gives any protocol on Stacks a trust-minimized way to bring real-world data on-chain.
+Clarity Optimistic Oracle is a general-purpose, permissionless assertion protocol built in Clarity for the Stacks blockchain.
 
-Any claim can be asserted — a price feed, a bridge event, an insurance condition, a prediction market outcome. Assertions are backed by **sBTC bonds**: post a bond to assert, lose it if you're wrong. One honest disputer is all it takes to keep the system clean.
+Any contract or user can assert a verifiable claim by staking a bond. If nobody disputes it within a liveness window, the claim becomes on-chain truth. If someone disputes, an arbiter decides — and the liar loses their bond.
 
-## How it works
+Any protocol on Stacks can plug in.
 
-{% stepper %}
-{% step %}
-## Assert
-
-Anyone submits a claim with an sBTC bond. The full claim is emitted on-chain for watchers; only its hash is stored.
-{% endstep %}
-
-{% step %}
-## Dispute (optional)
-
-Within the liveness window, any watcher can challenge the claim by posting a matching bond. Both bonds are locked.
-{% endstep %}
-
-{% step %}
-## Resolve or Settle
-
-No dispute? The asserter's bond is returned after the window expires. Disputed? An arbiter resolves: asserter wins both bonds, disputer wins both bonds, or both get their bond back.
-{% endstep %}
-{% endstepper %}
-
-## Explore the docs
+## Quick Links
 
 <table data-view="cards">
     <thead>
@@ -53,16 +21,20 @@ No dispute? The asserter's bond is returned after the window expires. Disputed? 
     </thead>
     <tbody>
         <tr>
+            <td>How It Works</td>
+            <td><a href="overview/how-it-works.md">The assert-dispute-settle lifecycle</a></td>
+        </tr>
+        <tr>
+            <td>Use Cases</td>
+            <td><a href="overview/use-cases.md">What you can build with it</a></td>
+        </tr>
+        <tr>
             <td>Architecture</td>
-            <td><a href="architecture.md">Architecture</a></td>
+            <td><a href="developers/architecture.md">Contract internals</a></td>
         </tr>
         <tr>
-            <td>Economics</td>
-            <td><a href="economics.md">Economics</a></td>
-        </tr>
-        <tr>
-            <td>Roadmap</td>
-            <td><a href="roadmap.md">Roadmap</a></td>
+            <td>Contract Reference</td>
+            <td><a href="developers/contract-reference.md">Functions, events, error codes</a></td>
         </tr>
     </tbody>
 </table>
