@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import type { PropsWithChildren } from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
 
 import { cn } from "@/lib/utils";
-import type { PropsWithChildren } from "react";
 import "./globals.css";
 
 import { Header } from "@/components/header";
@@ -47,6 +47,10 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  other: {
+    "talentapp:project_verification":
+      "5596fb46d81b14ce0be6ed3f516c3d1482b46a120127c58ea5bfb5bca498a6ed5b915e927b4d4d54238c7b8f408153b0b6313fdca540a0144e3fb7a9261fae48",
   },
 };
 
